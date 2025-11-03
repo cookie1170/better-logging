@@ -1,0 +1,7 @@
+{
+  "name": "Cookie.BetterLog.Logging",
+  "rootNamespace": "Cookie.BetterLogging",
+  "references": [
+    "GUID:fef19788c3cb4574b93f5283eba273a8"
+  ]
+}

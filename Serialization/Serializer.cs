@@ -1,7 +1,7 @@
 using System.Collections;
 using JetBrains.Annotations;
 
-namespace Cookie.BetterLog.Serialization
+namespace Cookie.BetterLogging.Serialization
 {
     [PublicAPI]
     public static partial class Serializer

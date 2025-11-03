@@ -3,7 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Text;
 
-namespace Cookie.BetterLog.Serialization
+namespace Cookie.BetterLogging.Serialization
 {
     public static partial class Serializer
     {

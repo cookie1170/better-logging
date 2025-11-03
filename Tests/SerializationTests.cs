@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Cookie.BetterLog.Serialization;
+using Cookie.BetterLogging.Serialization;
 using NUnit.Framework;
 
-namespace Cookie.BetterLog.Tests
+namespace Cookie.BetterLogging.Tests
 {
     public class SerializationTests
     {

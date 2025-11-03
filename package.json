@@ -8,5 +8,12 @@
   "author": {
     "name": "Cookie",
     "url": "https://github.com/cookie1170/"
-  }
+  },
+  "samples": [
+    {
+      "displayName": "Logging",
+      "description": "A sample demonstrating the different value types that can be logged",
+      "path": "Samples~/Logging"
+    }
+  ]
 }

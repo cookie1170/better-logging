@@ -1,6 +1,6 @@
 {
   "name": "Cookie.BetterLog.Tests",
-  "rootNamespace": "Cookie.BetterLog.Tests",
+  "rootNamespace": "Cookie.BetterLogging.Tests",
   "references": [
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner",
