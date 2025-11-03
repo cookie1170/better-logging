@@ -1,0 +1,17 @@
+using System.Collections;
+using JetBrains.Annotations;
+
+namespace Cookie.BetterLog.Serialization
+{
+    [PublicAPI]
+    public static partial class Serializer
+    {
+        public static string Serialize<T>(T obj) {
+            return obj switch {
+                IDictionary dictionary => SerializeDictionary(dictionary),
+                IEnumerable enumerable => SerializeEnumerable(enumerable),
+                _ => obj.ToString(),
+            };
+        }
+    }
+}

@@ -1,0 +1,44 @@
+using System.Collections.Generic;
+using Cookie.BetterLog.Serialization;
+using NUnit.Framework;
+
+namespace Cookie.BetterLog.Tests
+{
+    public class SerializationTests
+    {
+        [Test]
+        public void SerializeEnumerable() {
+            int[] array = { 1, 5, 2, 3 };
+            string serializedArray = Serializer.SerializeEnumerable(array);
+
+            Assert.AreEqual("[1, 5, 2, 3]", serializedArray);
+        }
+
+        [Test]
+        public void SerializeDictionary() {
+            Dictionary<string, int> dict = new() {
+                { "John", 1 },
+                { "Alice", 3 },
+                { "Bob", 5 },
+            };
+
+            string serializedDictionary = Serializer.SerializeDictionary(dict);
+            Assert.AreEqual("{ [John: 1], [Alice: 3], [Bob: 5] }", serializedDictionary);
+        }
+
+        [Test]
+        public void TypeRecognition() {
+            int[] array = { 1, 4, 8, 10 };
+            List<int> list = new() { 5, 12, 59 };
+            Dictionary<string, int> dict = new() {
+                { "John", 1 },
+                { "Alice", 3 },
+                { "Bob", 5 },
+            };
+
+            Assert.AreEqual(Serializer.SerializeEnumerable(array), Serializer.Serialize(array), "Array");
+            Assert.AreEqual(Serializer.SerializeEnumerable(list), Serializer.Serialize(list), "List");
+            Assert.AreEqual(Serializer.SerializeDictionary(dict), Serializer.SerializeDictionary(dict), "Dictionary");
+        }
+    }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "com.cookie.better-log",
+  "version": "0.0.1",
+  "displayName": "Better Log",
+  "description": "A better logging system for Unity, similar to the JavaScript console in your browser",
+  "unity": "6000.2",
+  "dependencies": {},
+  "author": {
+    "name": "Cookie",
+    "url": "https://github.com/cookie1170/"
+  }
+}
