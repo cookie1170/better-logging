@@ -8,6 +8,7 @@ namespace Cookie.BetterLogging.Serialization
     {
         public static string Serialize<T>(T obj) {
             return obj switch {
+                string str => str,
                 IDictionary dictionary => SerializeDictionary(dictionary),
                 IEnumerable enumerable => SerializeEnumerable(enumerable),
                 _ => obj.ToString(),

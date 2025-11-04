@@ -1,10 +1,10 @@
 {
-  "name": "Cookie.BetterLog.Tests",
+  "name": "Cookie.BetterLogging.Tests",
   "rootNamespace": "Cookie.BetterLogging.Tests",
   "references": [
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner",
-    "Cookie.BetterLog.Serialization"
+    "Cookie.BetterLogging.Serialization"
   ],
   "includePlatforms": [
     "Editor"

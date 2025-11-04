@@ -1,0 +1,19 @@
+{
+  "name": "Cookie.BetterLogging.Editor",
+  "rootNamespace": "Cookie.BetterLogging.Editor",
+  "references": [
+    "GUID:fef19788c3cb4574b93f5283eba273a8",
+    "GUID:3c67c218496f410ab63fe92916957603"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,18 @@
+VisualElement {
+}
+
+.entries {
+    
+}
+
+.entry {
+    padding: 4px;
+}
+
+.entry-normal {
+    background-color: var(--unity-colors-default-background);
+}
+
+.entry-alternate {
+    background-color: var(--unity-colors-alternated_rows-background);
+}

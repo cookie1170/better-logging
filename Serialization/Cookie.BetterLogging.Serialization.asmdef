@@ -1,5 +1,5 @@
 {
-  "name": "Cookie.BetterLog.Serialization",
+  "name": "Cookie.BetterLogging.Serialization",
   "rootNamespace": "Cookie.BetterLogging.Serialization",
   "references": [],
   "includePlatforms": [],
