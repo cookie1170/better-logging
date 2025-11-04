@@ -6,6 +6,7 @@ using Cookie.BetterLogging.Serialization;
 using JetBrains.Annotations;
 using UnityEngine;
 #if UNITY_EDITOR
+using System.IO;
 using UnityEditor;
 #endif
 
@@ -33,7 +34,7 @@ namespace Cookie.BetterLogging
         private static void OnLogMessageReceived(string condition, string stackTrace, LogType type) {
             if (_justDebugLogged) return;
 
-            AddEntry(new LogEntry(condition, stackTrace));
+            AddEntry(new LogEntry(condition, stackTrace, DateTime.Now));
         }
 
         #if UNITY_EDITOR
@@ -52,8 +53,8 @@ namespace Cookie.BetterLogging
             [CallerMemberName] string memberName = ""
         ) {
             string serializedObj = Serializer.Serialize(obj);
-            string stackTrace = $"{memberName} (at {filePath}:{lineNumber})";
-            AddEntry(new LogEntry(obj, stackTrace));
+            string stackTrace = $"{memberName} (at {ReplaceProjectPath(filePath)}:{lineNumber})";
+            AddEntry(new LogEntry(obj, stackTrace, DateTime.Now));
 
             StringBuilder sb = new();
             sb.AppendLine(serializedObj);
@@ -61,6 +62,14 @@ namespace Cookie.BetterLogging
             _justDebugLogged = true;
             Debug.Log(sb.ToString());
             _justDebugLogged = false;
+        }
+
+        private static string ReplaceProjectPath(string filePath) {
+            #if UNITY_EDITOR
+            return filePath.Replace(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar, "");
+            #else
+            return filePath;
+            #endif
         }
 
         private static void AddEntry(LogEntry entry) {
@@ -73,10 +82,12 @@ namespace Cookie.BetterLogging
     {
         public readonly object Content;
         public readonly string StackTrace;
+        public readonly string Time;
 
-        public LogEntry(object content, string stackTrace) {
+        public LogEntry(object content, string stackTrace, DateTime time) {
             Content = content;
             StackTrace = stackTrace;
+            Time = time.ToLongTimeString();
         }
     }
 }

@@ -1,8 +1,39 @@
 VisualElement {
 }
 
+.top-bar {
+    flex-shrink: 0;
+    flex-direction: row;
+    border-top-color: var(--unity-colors-default-border);
+    border-right-color: var(--unity-colors-default-border);
+    border-bottom-color: var(--unity-colors-default-border);
+    border-left-color: var(--unity-colors-default-border);
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 1px;
+    border-left-width: 0;
+}
+
+.top-bar-button {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left-width: 0;
+    border-right-width: 1px;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    border-right-color: var(--unity-colors-default-border);
+    border-top-color: var(--unity-colors-default-border);
+    border-left-color: var(--unity-colors-default-border);
+    border-bottom-color: var(--unity-colors-default-border);
+}
+
 .entries {
-    
 }
 
 .entry {

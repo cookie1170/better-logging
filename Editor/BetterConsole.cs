@@ -1,5 +1,6 @@
 using Cookie.BetterLogging.Serialization;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Cookie.BetterLogging.Editor
@@ -25,17 +26,17 @@ namespace Cookie.BetterLogging.Editor
 
         private void CreateGUI() {
             VisualElement topBar = new();
+            topBar.AddToClassList("top-bar");
 
-            Button clearButton = new(() => {
-                    BetterLog.Logs.Clear();
-                    Redraw();
-                }
-            ) {
+            Button clearButton = new(Clear) {
                 text = "Clear",
             };
+            clearButton.AddToClassList("top-bar-button");
+
             topBar.Add(clearButton);
 
-            VisualElement entriesContainer = new();
+            ScrollView entriesContainer = new();
+            entriesContainer.scrollOffset = new Vector2(0, entriesContainer.verticalScroller.highValue);
             entriesContainer.AddToClassList("entries");
 
             for (int i = 0; i < BetterLog.Logs.Count; i++) {
@@ -45,6 +46,11 @@ namespace Cookie.BetterLogging.Editor
 
             rootVisualElement.Add(topBar);
             rootVisualElement.Add(entriesContainer);
+        }
+
+        private void Clear() {
+            BetterLog.Logs.Clear();
+            Redraw();
         }
 
         private void OnLog(LogEntry _) {
@@ -62,7 +68,7 @@ namespace Cookie.BetterLogging.Editor
             container.AddToClassList("entry");
             container.AddToClassList(isAlternate ? "entry-alternate" : "entry-normal");
 
-            container.Add(new Label(Serializer.Serialize(entry.Content)));
+            container.Add(new Label($"[{entry.Time}] {Serializer.Serialize(entry.Content)}"));
             container.Add(new Label(entry.StackTrace));
 
             return container;
