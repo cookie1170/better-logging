@@ -15,14 +15,8 @@ VisualElement {
 }
 
 .top-bar-button {
-    margin-top: 0;
-    margin-right: 0;
-    margin-bottom: 0;
-    margin-left: 0;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
+    margin: 0;
+    border-radius: 0;
     border-left-width: 0;
     border-right-width: 1px;
     border-top-width: 0;
@@ -33,11 +27,26 @@ VisualElement {
     border-bottom-color: var(--unity-colors-default-border);
 }
 
-.entries {
+.stack-trace {
+    border-top-width: 1px;
+    border-top-color: var(--unity-colors-default-border);
+    flex-shrink: 0;
+    flex-grow: 0;
+    height: 79px;
+    padding-top: 4px;
+    padding-left: 4px;
 }
 
-.entry {
-    
+.stack-trace-label {
+    white-space: normal;
+}
+
+.entries {
+    flex-grow: 1;
+}
+
+.entry-label {
+    white-space: normal;
 }
 
 .entry-content {

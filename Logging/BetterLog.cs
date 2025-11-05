@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Cookie.BetterLogging.Serialization;
 using JetBrains.Annotations;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 #if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
@@ -48,13 +50,12 @@ namespace Cookie.BetterLogging
 
         public static void Log(
             object obj,
-            [CallerLineNumber] int lineNumber = 0,
             [CallerFilePath] string filePath = "",
-            [CallerMemberName] string memberName = ""
+            [CallerLineNumber] int lineNumber = 0
         ) {
             string serializedObj = Serializer.Serialize(obj);
-            string stackTrace = $"{memberName} (at {ReplaceProjectPath(filePath)}:{lineNumber})";
-            AddEntry(new LogEntry(obj, stackTrace, DateTime.Now));
+            string stackTrace = ReplaceProjectPath(new StackTrace(true).ToString());
+            AddEntry(new LogEntry(obj, stackTrace, DateTime.Now, filePath, lineNumber));
 
             StringBuilder sb = new();
             sb.AppendLine(serializedObj);
@@ -66,7 +67,7 @@ namespace Cookie.BetterLogging
 
         private static string ReplaceProjectPath(string filePath) {
             #if UNITY_EDITOR
-            return filePath.Replace(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar, "");
+            return filePath.Replace(Directory.GetCurrentDirectory(), ".");
             #else
             return filePath;
             #endif
@@ -83,10 +84,20 @@ namespace Cookie.BetterLogging
         public readonly object Content;
         public readonly string StackTrace;
         public readonly string Time;
+        [CanBeNull] public readonly string FilePath;
+        public readonly int? LineNumber;
 
-        public LogEntry(object content, string stackTrace, DateTime time) {
+        public LogEntry(
+            object content,
+            string stackTrace,
+            DateTime time,
+            string filePath = null,
+            int? lineNumber = null
+        ) {
             Content = content;
             StackTrace = stackTrace;
+            FilePath = filePath;
+            LineNumber = lineNumber;
             Time = time.ToLongTimeString();
         }
     }
