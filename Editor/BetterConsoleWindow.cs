@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Cookie.BetterLogging.Serialization;
 using UnityEditor;
-using UnityEditorInternal;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Cookie.BetterLogging.Editor
 {
     public class BetterConsoleWindow : EditorWindow
     {
-        private ListView _currentEntriesContainer;
+        private TreeView _currentEntriesContainer;
         private StyleSheet _styleSheet;
 
         private void OnEnable() {
@@ -30,8 +28,6 @@ namespace Cookie.BetterLogging.Editor
         }
 
         private void CreateGUI() {
-            LogEntry? selectedEntry = null;
-
             VisualElement topBar = new();
             topBar.AddToClassList("top-bar");
 
@@ -51,78 +47,26 @@ namespace Cookie.BetterLogging.Editor
 
             stackTrace.Add(stackTraceLabel);
 
-            _currentEntriesContainer = new ListView {
-                bindItem = BindEntry,
-                makeItem = MakeEntry,
-                itemsSource = BetterLog.Logs,
-                virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight,
-                showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
-                makeNoneElement = () => null,
+            // TODO: fix the stack trace
+            _currentEntriesContainer = new TreeView {
+                makeItem = () => new Label {
+                    style = {
+                        flexGrow = 1,
+                        unityTextAlign = TextAnchor.MiddleLeft,
+                    },
+                },
+                selectionType = SelectionType.Single,
             };
 
-            _currentEntriesContainer.selectedIndicesChanged += OnEntrySelected;
-            _currentEntriesContainer.itemsChosen += OnEntryChosen;
+            _currentEntriesContainer.bindItem = (element, i) => {
+                ((Label)element).text = _currentEntriesContainer.GetItemDataForIndex<LogNode>(i).Label;
+            };
 
             _currentEntriesContainer.AddToClassList("entries");
 
             rootVisualElement.Add(topBar);
             rootVisualElement.Add(_currentEntriesContainer);
             rootVisualElement.Add(stackTrace);
-            UpdateStackTraceDisplay();
-
-            return;
-
-            void OnEntrySelected(IEnumerable<int> selectedIndices) {
-                int[] indices = selectedIndices as int[] ?? selectedIndices.ToArray();
-
-                if (!indices.Any()) {
-                    selectedEntry = null;
-                    UpdateStackTraceDisplay();
-
-                    return;
-                }
-
-                int index = indices.FirstOrDefault();
-                selectedEntry = BetterLog.Logs[index];
-
-                UpdateStackTraceDisplay();
-            }
-
-            void OnEntryChosen(IEnumerable<object> items) {
-                object chosenItem = items.FirstOrDefault();
-
-                if (chosenItem == null) return;
-
-                var chosenEntry = (LogEntry)chosenItem;
-                if (chosenEntry is { FilePath: not null, LineNumber: not null })
-                    InternalEditorUtility.OpenFileAtLineExternal(chosenEntry.FilePath, (int)chosenEntry.LineNumber);
-            }
-
-            void UpdateStackTraceDisplay() {
-                stackTrace.style.display = selectedEntry != null ? DisplayStyle.Flex : DisplayStyle.None;
-                stackTraceLabel.text = selectedEntry?.StackTrace ?? "";
-            }
-        }
-
-        private static VisualElement MakeEntry() {
-            VisualElement item = new();
-            VisualElement content = new();
-
-            Label contentLabel = new() { name = "content" };
-
-            content.Add(contentLabel);
-            item.Add(content);
-            item.AddToClassList("entry");
-            content.AddToClassList("entry-content");
-            contentLabel.AddToClassList("entry-label");
-
-            return item;
-        }
-
-        private static void BindEntry(VisualElement element, int index) {
-            LogEntry entry = BetterLog.Logs[index];
-
-            element.Q<Label>("content").text = $"[{entry.Time}] {Serializer.Serialize(entry.Content)}";
         }
 
         private void Clear() {
@@ -137,8 +81,38 @@ namespace Cookie.BetterLogging.Editor
         private void Redraw() {
             if (_currentEntriesContainer == null) return;
 
+            List<TreeViewItemData<LogNode>> data = new(BetterLog.Logs.Count);
+
+            int indexOffset = 0;
+            for (int i = 0; i < BetterLog.Logs.Count; i++)
+                data.Add(GetTreeViewItemData(BetterLog.Logs[i].Content, ref indexOffset));
+
+            _currentEntriesContainer.SetRootItems(data);
             _currentEntriesContainer.RefreshItems();
-            if (BetterLog.Logs.Count > 0) _currentEntriesContainer.ScrollToItem(BetterLog.Logs.Count - 1);
+            if (BetterLog.Logs.Count > 0) _currentEntriesContainer.ScrollToItem(-1);
+        }
+
+
+        private static TreeViewItemData<LogNode> GetTreeViewItemData(LogNode item, ref int indexOffset) {
+            int index = 0 + indexOffset;
+
+            TreeViewItemData<LogNode> result = Process(item);
+            indexOffset = index + 1;
+
+            return result;
+
+            TreeViewItemData<LogNode> Process(LogNode i) {
+                List<TreeViewItemData<LogNode>> children = null;
+
+                if (i.Children is { Count: > 0 }) {
+                    children = new List<TreeViewItemData<LogNode>>(i.Children.Count);
+                    foreach (LogNode child in i.Children) children.Add(Process(child));
+                }
+
+                TreeViewItemData<LogNode> data = new(index++, i, children);
+
+                return data;
+            }
         }
 
         [MenuItem("Window/Cookie/Better Console")]

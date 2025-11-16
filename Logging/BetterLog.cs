@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Cookie.BetterLogging.Serialization;
@@ -17,8 +19,8 @@ namespace Cookie.BetterLogging
     [PublicAPI]
     public static class BetterLog
     {
-        public static readonly List<LogEntry> Logs = new();
-
+        private const int DepthLimit = 5;
+        public static List<LogEntry> Logs = new();
         private static bool _justDebugLogged = false;
         public static event Action<LogEntry> OnLog;
 
@@ -36,7 +38,7 @@ namespace Cookie.BetterLogging
         private static void OnLogMessageReceived(string condition, string stackTrace, LogType type) {
             if (_justDebugLogged) return;
 
-            AddEntry(new LogEntry(condition, stackTrace, DateTime.Now));
+            AddEntry(new LogEntry(GetLogFor(condition), stackTrace, DateTime.Now));
         }
 
         #if UNITY_EDITOR
@@ -54,8 +56,8 @@ namespace Cookie.BetterLogging
             [CallerLineNumber] int lineNumber = 0
         ) {
             string serializedObj = Serializer.Serialize(obj);
-            string stackTrace = ReplaceProjectPath(new StackTrace(true).ToString());
-            AddEntry(new LogEntry(obj, stackTrace, DateTime.Now, filePath, lineNumber));
+            string stackTrace = FormatStackTrace(new StackTrace(true).ToString());
+            AddEntry(new LogEntry(GetLogFor(obj), stackTrace, DateTime.Now, filePath, lineNumber));
 
             StringBuilder sb = new();
             sb.AppendLine(serializedObj);
@@ -65,11 +67,14 @@ namespace Cookie.BetterLogging
             _justDebugLogged = false;
         }
 
-        private static string ReplaceProjectPath(string filePath) {
+        private static string FormatStackTrace(string originalTrace) {
+            string[] splitTrace = originalTrace.Split(Environment.NewLine)
+                .Where(s => !s.Contains("Cookie.BetterLogging.BetterLog.Log")).ToArray();
+            string trace = splitTrace.Aggregate((s1, s2) => s1 + Environment.NewLine + s2);
             #if UNITY_EDITOR
-            return filePath.Replace(Directory.GetCurrentDirectory(), ".");
+            return trace.Replace(Directory.GetCurrentDirectory(), ".");
             #else
-            return filePath;
+            return trace;
             #endif
         }
 
@@ -77,18 +82,53 @@ namespace Cookie.BetterLogging
             Logs.Add(entry);
             OnLog?.Invoke(entry);
         }
+
+        private static LogNode GetLogFor(object obj, int depth = 0, string label = null) {
+            if (depth > DepthLimit) return new LogNode(Serializer.Serialize(obj));
+            switch (obj) {
+                case string str:
+                    return new LogNode(str);
+                case Vector2 or Vector3 or Vector4 or Vector2Int or Vector3Int:
+                    return new LogNode(obj.ToString());
+            }
+
+            LogNode[] children = obj switch {
+                IDictionary dictionary => GetLogForDictionary(dictionary, depth + 1),
+                IEnumerable enumerable => GetLogForEnumerable(enumerable, depth + 1),
+                _ => GetLogForFields(obj, depth + 1),
+            };
+
+            LogNode root = new(label ?? obj.GetType().Name, children);
+
+            return root;
+        }
+
+        private static LogNode[] GetLogForEnumerable(IEnumerable enumerable, int depth) {
+            List<object> items = enumerable.Cast<object>().ToList();
+
+            List<LogNode> result = new();
+
+            for (int i = 0; i < items.Count; i++) result.Add(GetLogFor(items[i], depth + 1, i.ToString()));
+
+            return result.ToArray();
+        }
+
+        private static LogNode[] GetLogForDictionary(IDictionary dictionary, int depth) =>
+            throw new NotImplementedException();
+
+        private static LogNode[] GetLogForFields(object obj, int depth) => throw new NotImplementedException();
     }
 
     public struct LogEntry
     {
-        public readonly object Content;
+        public readonly LogNode Content;
         public readonly string StackTrace;
         public readonly string Time;
         [CanBeNull] public readonly string FilePath;
         public readonly int? LineNumber;
 
         public LogEntry(
-            object content,
+            LogNode content,
             string stackTrace,
             DateTime time,
             string filePath = null,
@@ -99,6 +139,17 @@ namespace Cookie.BetterLogging
             FilePath = filePath;
             LineNumber = lineNumber;
             Time = time.ToLongTimeString();
+        }
+    }
+
+    public class LogNode
+    {
+        [CanBeNull] public readonly IReadOnlyList<LogNode> Children;
+        public readonly string Label;
+
+        public LogNode(string label, LogNode[] children = null) {
+            Label = label;
+            Children = children ?? Array.Empty<LogNode>();
         }
     }
 }

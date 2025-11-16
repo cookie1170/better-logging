@@ -7,6 +7,8 @@ namespace Cookie.BetterLogging.Serialization
     public static partial class Serializer
     {
         public static string Serialize<T>(T obj) {
+            if (Equals(obj, default(T))) return "null";
+
             return obj switch {
                 string str => str,
                 IDictionary dictionary => SerializeDictionary(dictionary),
