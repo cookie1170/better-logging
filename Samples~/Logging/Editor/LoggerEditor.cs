@@ -1,27 +1,45 @@
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace Cookie.BetterLogging.Samples
 {
     [CustomEditor(typeof(Logger))]
-    public class LoggerEditor : Editor
+    public class LoggerEditor : UnityEditor.Editor
     {
         public override VisualElement CreateInspectorGUI() {
             var logger = (Logger)target;
 
             VisualElement root = new();
-            PropertyField field = new() {
-                bindingPath = "list",
-            };
-            Button button = new() {
-                text = "Log",
+            // PropertyField field = new() {
+            //     bindingPath = "list",
+            // };
+
+            Button betterLogList = new() {
+                text = "Better Log List",
             };
 
-            button.clicked += () => logger.Log();
+            Button unityLogList = new() {
+                text = "Unity Log List",
+            };
 
-            root.Add(field);
-            root.Add(button);
+            Button betterLogNestedList = new() {
+                text = "Better Log Nested List",
+            };
+
+            Button unityLogNestedList = new() {
+                text = "Unity Log Nested List",
+            };
+
+            betterLogList.clicked += () => logger.BetterLogList();
+            unityLogList.clicked += () => logger.UnityLogList();
+            betterLogNestedList.clicked += () => logger.BetterLogNestedList();
+            unityLogNestedList.clicked += () => logger.UnityLogNestedList();
+
+            // root.Add(field);
+            root.Add(betterLogList);
+            root.Add(unityLogList);
+            root.Add(betterLogNestedList);
+            root.Add(unityLogNestedList);
 
             return root;
         }
