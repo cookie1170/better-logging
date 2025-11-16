@@ -30,7 +30,7 @@ namespace Cookie.BetterLogging.Editor
         }
 
         private void CreateGUI() {
-            LogNode selectedEntry;
+            LogNode selectedEntry = null;
 
             VisualElement topBar = new();
             topBar.AddToClassList("top-bar");
@@ -73,6 +73,8 @@ namespace Cookie.BetterLogging.Editor
             rootVisualElement.Add(topBar);
             rootVisualElement.Add(_currentEntriesContainer);
             rootVisualElement.Add(stackTrace);
+
+            UpdateStackTraceDisplay();
 
             return;
 
