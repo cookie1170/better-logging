@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -28,6 +30,8 @@ namespace Cookie.BetterLogging.Editor
         }
 
         private void CreateGUI() {
+            LogNode selectedEntry;
+
             VisualElement topBar = new();
             topBar.AddToClassList("top-bar");
 
@@ -47,7 +51,6 @@ namespace Cookie.BetterLogging.Editor
 
             stackTrace.Add(stackTraceLabel);
 
-            // TODO: fix the stack trace
             _currentEntriesContainer = new TreeView {
                 makeItem = () => new Label {
                     style = {
@@ -62,11 +65,48 @@ namespace Cookie.BetterLogging.Editor
                 ((Label)element).text = _currentEntriesContainer.GetItemDataForIndex<LogNode>(i).Label;
             };
 
+            _currentEntriesContainer.selectedIndicesChanged += OnEntrySelected;
+            _currentEntriesContainer.itemsChosen += OnEntryChosen;
+
             _currentEntriesContainer.AddToClassList("entries");
 
             rootVisualElement.Add(topBar);
             rootVisualElement.Add(_currentEntriesContainer);
             rootVisualElement.Add(stackTrace);
+
+            return;
+
+
+            void OnEntrySelected(IEnumerable<int> selectedIndices) {
+                int[] indices = selectedIndices as int[] ?? selectedIndices.ToArray();
+
+                if (!indices.Any()) {
+                    selectedEntry = null;
+                    UpdateStackTraceDisplay();
+
+                    return;
+                }
+
+                int index = indices.FirstOrDefault();
+                selectedEntry = _currentEntriesContainer?.GetItemDataForIndex<LogNode>(index);
+
+                UpdateStackTraceDisplay();
+            }
+
+            void OnEntryChosen(IEnumerable<object> items) {
+                object chosenItem = items.FirstOrDefault();
+
+                if (chosenItem == null) return;
+
+                LogInfo info = ((LogNode)chosenItem).Info;
+                if (info is { FilePath: not null, LineNumber: not null })
+                    InternalEditorUtility.OpenFileAtLineExternal(info.FilePath, (int)info.LineNumber);
+            }
+
+            void UpdateStackTraceDisplay() {
+                stackTrace.style.display = selectedEntry != null ? DisplayStyle.Flex : DisplayStyle.None;
+                stackTraceLabel.text = selectedEntry?.Info.StackTrace ?? "";
+            }
         }
 
         private void Clear() {

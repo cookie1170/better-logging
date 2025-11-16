@@ -35,10 +35,11 @@ namespace Cookie.BetterLogging
             #endif
         }
 
-        private static void OnLogMessageReceived(string condition, string stackTrace, LogType type) {
+        private static void OnLogMessageReceived(string message, string stackTrace, LogType type) {
             if (_justDebugLogged) return;
 
-            AddEntry(new LogEntry(GetLogFor(condition), stackTrace, DateTime.Now));
+            var logInfo = new LogInfo(stackTrace);
+            AddEntry(new LogEntry(GetLogFor(message, logInfo), DateTime.Now));
         }
 
         #if UNITY_EDITOR
@@ -57,7 +58,8 @@ namespace Cookie.BetterLogging
         ) {
             string serializedObj = Serializer.Serialize(obj);
             string stackTrace = FormatStackTrace(new StackTrace(true).ToString());
-            AddEntry(new LogEntry(GetLogFor(obj), stackTrace, DateTime.Now, filePath, lineNumber));
+            LogInfo info = new(stackTrace, filePath, lineNumber);
+            AddEntry(new LogEntry(GetLogFor(obj, info), DateTime.Now));
 
             StringBuilder sb = new();
             sb.AppendLine(serializedObj);
@@ -83,61 +85,53 @@ namespace Cookie.BetterLogging
             OnLog?.Invoke(entry);
         }
 
-        private static LogNode GetLogFor(object obj, int depth = 0, string label = null) {
-            if (depth > DepthLimit) return new LogNode(Serializer.Serialize(obj));
+        private static LogNode GetLogFor(object obj, LogInfo info, int depth = 0, string label = null) {
+            if (depth > DepthLimit) return new LogNode(Serializer.Serialize(obj), info);
             switch (obj) {
                 case string str:
-                    return new LogNode(str);
+                    return new LogNode(str, info);
                 case Vector2 or Vector3 or Vector4 or Vector2Int or Vector3Int:
-                    return new LogNode(obj.ToString());
+                    return new LogNode(obj.ToString(), info);
             }
 
             LogNode[] children = obj switch {
-                IDictionary dictionary => GetLogForDictionary(dictionary, depth + 1),
-                IEnumerable enumerable => GetLogForEnumerable(enumerable, depth + 1),
-                _ => GetLogForFields(obj, depth + 1),
+                IDictionary dictionary => GetLogForDictionary(dictionary, info, depth + 1),
+                IEnumerable enumerable => GetLogForEnumerable(enumerable, info, depth + 1),
+                _ => GetLogForFields(obj, info, depth + 1),
             };
 
-            LogNode root = new(label ?? obj.GetType().Name, children);
+            LogNode root = new(label ?? obj.GetType().Name, info, children);
 
             return root;
         }
 
-        private static LogNode[] GetLogForEnumerable(IEnumerable enumerable, int depth) {
+        private static LogNode[] GetLogForEnumerable(IEnumerable enumerable, LogInfo info, int depth) {
             List<object> items = enumerable.Cast<object>().ToList();
 
             List<LogNode> result = new();
 
-            for (int i = 0; i < items.Count; i++) result.Add(GetLogFor(items[i], depth + 1, i.ToString()));
+            for (int i = 0; i < items.Count; i++) result.Add(GetLogFor(items[i], info, depth + 1, i.ToString()));
 
             return result.ToArray();
         }
 
-        private static LogNode[] GetLogForDictionary(IDictionary dictionary, int depth) =>
+        private static LogNode[] GetLogForDictionary(IDictionary dictionary, LogInfo info, int depth) =>
             throw new NotImplementedException();
 
-        private static LogNode[] GetLogForFields(object obj, int depth) => throw new NotImplementedException();
+        private static LogNode[] GetLogForFields(object o, object obj, int depth) =>
+            throw new NotImplementedException();
     }
 
     public struct LogEntry
     {
         public readonly LogNode Content;
-        public readonly string StackTrace;
         public readonly string Time;
-        [CanBeNull] public readonly string FilePath;
-        public readonly int? LineNumber;
 
         public LogEntry(
             LogNode content,
-            string stackTrace,
-            DateTime time,
-            string filePath = null,
-            int? lineNumber = null
+            DateTime time
         ) {
             Content = content;
-            StackTrace = stackTrace;
-            FilePath = filePath;
-            LineNumber = lineNumber;
             Time = time.ToLongTimeString();
         }
     }
@@ -145,11 +139,26 @@ namespace Cookie.BetterLogging
     public class LogNode
     {
         [CanBeNull] public readonly IReadOnlyList<LogNode> Children;
+        public readonly LogInfo Info;
         public readonly string Label;
 
-        public LogNode(string label, LogNode[] children = null) {
+        public LogNode(string label, LogInfo info, LogNode[] children = null) {
             Label = label;
+            Info = info;
             Children = children ?? Array.Empty<LogNode>();
+        }
+    }
+
+    public class LogInfo
+    {
+        [CanBeNull] public string FilePath;
+        public int? LineNumber;
+        public string StackTrace;
+
+        public LogInfo(string stackTrace, [CanBeNull] string filePath = null, int? lineNumber = null) {
+            StackTrace = stackTrace;
+            FilePath = filePath;
+            LineNumber = lineNumber;
         }
     }
 }
