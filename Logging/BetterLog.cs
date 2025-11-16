@@ -125,14 +125,14 @@ namespace Cookie.BetterLogging
     public struct LogEntry
     {
         public readonly LogNode Content;
-        public readonly string Time;
 
         public LogEntry(
             LogNode content,
             DateTime time
         ) {
             Content = content;
-            Time = time.ToLongTimeString();
+            string timeString = time.ToLongTimeString();
+            Content.Label = $"[{timeString}] {Content.Label}";
         }
     }
 
@@ -140,7 +140,7 @@ namespace Cookie.BetterLogging
     {
         [CanBeNull] public readonly IReadOnlyList<LogNode> Children;
         public readonly LogInfo Info;
-        public readonly string Label;
+        public string Label;
 
         public LogNode(string label, LogInfo info, LogNode[] children = null) {
             Label = label;
@@ -151,9 +151,9 @@ namespace Cookie.BetterLogging
 
     public class LogInfo
     {
-        [CanBeNull] public string FilePath;
-        public int? LineNumber;
-        public string StackTrace;
+        [CanBeNull] public readonly string FilePath;
+        public readonly int? LineNumber;
+        public readonly string StackTrace;
 
         public LogInfo(string stackTrace, [CanBeNull] string filePath = null, int? lineNumber = null) {
             StackTrace = stackTrace;
