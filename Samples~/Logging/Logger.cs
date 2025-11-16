@@ -17,20 +17,20 @@ namespace Cookie.BetterLogging.Samples
             },
         };
 
-        public void BetterLogList() {
-            BetterLog.Log(_list);
-        }
-
-        public void BetterLogNestedList() {
-            BetterLog.Log(_nestedList);
-        }
-
         public void UnityLogList() {
             Debug.Log(_list);
         }
 
         public void UnityLogNestedList() {
             Debug.Log(_nestedList);
+        }
+
+        public void BetterLogList() {
+            BetterLog.Log(_list);
+        }
+
+        public void BetterLogNestedList() {
+            BetterLog.Log(_nestedList);
         }
     }
 }

@@ -14,32 +14,37 @@ namespace Cookie.BetterLogging.Samples
             //     bindingPath = "list",
             // };
 
-            Button betterLogList = new() {
-                text = "Better Log List",
-            };
+            Foldout unityLog = new() { text = "Unity Log" };
+            Foldout betterLog = new() { text = "Better Log" };
 
             Button unityLogList = new() {
                 text = "Unity Log List",
-            };
-
-            Button betterLogNestedList = new() {
-                text = "Better Log Nested List",
             };
 
             Button unityLogNestedList = new() {
                 text = "Unity Log Nested List",
             };
 
-            betterLogList.clicked += () => logger.BetterLogList();
+            Button betterLogList = new() {
+                text = "Better Log List",
+            };
+
+            Button betterLogNestedList = new() {
+                text = "Better Log Nested List",
+            };
+
             unityLogList.clicked += () => logger.UnityLogList();
-            betterLogNestedList.clicked += () => logger.BetterLogNestedList();
             unityLogNestedList.clicked += () => logger.UnityLogNestedList();
+            betterLogList.clicked += () => logger.BetterLogList();
+            betterLogNestedList.clicked += () => logger.BetterLogNestedList();
 
             // root.Add(field);
-            root.Add(betterLogList);
-            root.Add(unityLogList);
-            root.Add(betterLogNestedList);
-            root.Add(unityLogNestedList);
+            unityLog.Add(unityLogList);
+            unityLog.Add(unityLogNestedList);
+            betterLog.Add(betterLogList);
+            betterLog.Add(betterLogNestedList);
+            root.Add(unityLog);
+            root.Add(betterLog);
 
             return root;
         }
