@@ -42,14 +42,21 @@ namespace Cookie.BetterLogging.Editor
 
             topBar.Add(clearButton);
 
-            ScrollView stackTrace = new();
-            stackTrace.Add(new Label("<b>Stack Trace</b>"));
-            stackTrace.AddToClassList("stack-trace");
+            VisualElement stackTraceContainer = new();
+            stackTraceContainer.AddToClassList("stack-trace");
+
+            Foldout stackTraceFoldout = new() { text = "<b>Stack Trace</b>" };
+            stackTraceFoldout.AddToClassList("stack-trace-foldout");
+            stackTraceContainer.Add(stackTraceFoldout);
+
+            ScrollView stackTraceView = new();
+            stackTraceView.AddToClassList("stack-trace-view");
+            stackTraceFoldout.Add(stackTraceView);
 
             Label stackTraceLabel = new();
             stackTraceLabel.AddToClassList("stack-trace-label");
 
-            stackTrace.Add(stackTraceLabel);
+            stackTraceView.Add(stackTraceLabel);
 
             _currentEntriesContainer = new TreeView {
                 makeItem = MakeItem,
@@ -69,7 +76,7 @@ namespace Cookie.BetterLogging.Editor
 
             rootVisualElement.Add(topBar);
             rootVisualElement.Add(_currentEntriesContainer);
-            rootVisualElement.Add(stackTrace);
+            rootVisualElement.Add(stackTraceContainer);
 
             UpdateStackTraceDisplay();
 
@@ -103,7 +110,7 @@ namespace Cookie.BetterLogging.Editor
             }
 
             void UpdateStackTraceDisplay() {
-                stackTrace.style.display = selectedEntry != null ? DisplayStyle.Flex : DisplayStyle.None;
+                stackTraceView.style.display = selectedEntry != null ? DisplayStyle.Flex : DisplayStyle.None;
                 stackTraceLabel.text = selectedEntry?.Info.StackTrace ?? "";
             }
         }
