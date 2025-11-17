@@ -47,7 +47,7 @@ namespace Cookie.BetterLogging.Editor
             VisualElement stackTraceContainer = new();
             stackTraceContainer.AddToClassList("stack-trace");
 
-            Foldout stackTraceFoldout = new() { text = "<b>Stack Trace</b>" };
+            Foldout stackTraceFoldout = new() { text = "<b>Stack Trace</b>", value = false };
             stackTraceFoldout.AddToClassList("stack-trace-foldout");
             stackTraceContainer.Add(stackTraceFoldout);
 
@@ -119,8 +119,7 @@ namespace Cookie.BetterLogging.Editor
             }
 
             void UpdateStackTraceDisplay() {
-                stackTraceView.style.display = selectedEntry != null ? DisplayStyle.Flex : DisplayStyle.None;
-                stackTraceLabel.text = selectedEntry?.Info.StackTrace ?? "";
+                stackTraceLabel.text = selectedEntry?.Info.StackTrace ?? "No entry selected";
             }
         }
 
