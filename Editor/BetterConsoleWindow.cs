@@ -10,7 +10,9 @@ namespace Cookie.BetterLogging.Editor
 {
     public class BetterConsoleWindow : EditorWindow
     {
+        private readonly HashSet<(int id, bool isExpanded, bool allChildren)> _expandedItems = new();
         private TreeView _currentEntriesContainer;
+        private bool _isBeingRefreshed;
         private StyleSheet _styleSheet;
 
         private void OnEnable() {
@@ -58,6 +60,12 @@ namespace Cookie.BetterLogging.Editor
 
             stackTraceView.Add(stackTraceLabel);
 
+            if (_currentEntriesContainer != null) {
+                _currentEntriesContainer.itemsChosen -= OnEntryChosen;
+                _currentEntriesContainer.selectedIndicesChanged -= OnEntrySelected;
+                _currentEntriesContainer.itemExpandedChanged -= OnItemExpandedChanged;
+            }
+
             _currentEntriesContainer = new TreeView {
                 makeItem = MakeItem,
                 selectionType = SelectionType.Single,
@@ -69,8 +77,9 @@ namespace Cookie.BetterLogging.Editor
                 ((Label)element).text = _currentEntriesContainer.GetItemDataForIndex<LogNode>(i).Label;
             };
 
-            _currentEntriesContainer.selectedIndicesChanged += OnEntrySelected;
             _currentEntriesContainer.itemsChosen += OnEntryChosen;
+            _currentEntriesContainer.selectedIndicesChanged += OnEntrySelected;
+            _currentEntriesContainer.itemExpandedChanged += OnItemExpandedChanged;
 
             _currentEntriesContainer.AddToClassList("entries");
 
@@ -115,6 +124,22 @@ namespace Cookie.BetterLogging.Editor
             }
         }
 
+        private void OnItemExpandedChanged(TreeViewExpansionChangedArgs args) {
+            if (_isBeingRefreshed) return; // hacky
+
+            // awful
+            (int id, bool isExpanded, bool isAppliedToAllChildren) item = (args.id, args.isExpanded,
+                args.isAppliedToAllChildren);
+            if (args.isExpanded) {
+                _expandedItems.Add(item);
+            } else {
+                (int id, bool, bool isAppliedToAllChildren) expanded = (args.id, true, args.isAppliedToAllChildren);
+                if (_expandedItems.Contains(expanded))
+                    _expandedItems.Remove((args.id, true, args.isAppliedToAllChildren));
+                else _expandedItems.Add(item);
+            }
+        }
+
         private static VisualElement MakeItem() {
             var label = new Label { style = { flexGrow = 1, unityTextAlign = TextAnchor.MiddleLeft } };
             label.AddToClassList("entry-label");
@@ -124,6 +149,7 @@ namespace Cookie.BetterLogging.Editor
 
         private void Clear() {
             BetterLog.Logs.Clear();
+            _expandedItems.Clear();
             Refresh();
         }
 
@@ -141,7 +167,19 @@ namespace Cookie.BetterLogging.Editor
                 data.Add(GetTreeViewItemData(BetterLog.Logs[i].Content, ref indexOffset));
 
             _currentEntriesContainer.SetRootItems(data);
+            _isBeingRefreshed = true;
+
+            foreach ((int id, bool isExpanded, bool allChildren) item in _expandedItems) {
+                if (item.isExpanded)
+                    _currentEntriesContainer.ExpandItem(item.id, item.allChildren, false);
+                else
+                    _currentEntriesContainer.CollapseItem(item.id, item.allChildren, false);
+            }
+
             _currentEntriesContainer.RefreshItems();
+
+            _isBeingRefreshed = false;
+
             if (BetterLog.Logs.Count > 0) _currentEntriesContainer.ScrollToItem(-1);
         }
 
