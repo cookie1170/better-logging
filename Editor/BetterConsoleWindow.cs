@@ -52,13 +52,10 @@ namespace Cookie.BetterLogging.Editor
             stackTrace.Add(stackTraceLabel);
 
             _currentEntriesContainer = new TreeView {
-                makeItem = () => new Label {
-                    style = {
-                        flexGrow = 1,
-                        unityTextAlign = TextAnchor.MiddleLeft,
-                    },
-                },
+                makeItem = MakeItem,
                 selectionType = SelectionType.Single,
+                showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
+                virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight,
             };
 
             _currentEntriesContainer.bindItem = (element, i) => {
@@ -111,16 +108,23 @@ namespace Cookie.BetterLogging.Editor
             }
         }
 
+        private static VisualElement MakeItem() {
+            var label = new Label { style = { flexGrow = 1, unityTextAlign = TextAnchor.MiddleLeft } };
+            label.AddToClassList("entry-label");
+
+            return label;
+        }
+
         private void Clear() {
             BetterLog.Logs.Clear();
-            Redraw();
+            Refresh();
         }
 
         private void OnLog(LogEntry _) {
-            Redraw();
+            Refresh();
         }
 
-        private void Redraw() {
+        private void Refresh() {
             if (_currentEntriesContainer == null) return;
 
             List<TreeViewItemData<LogNode>> data = new(BetterLog.Logs.Count);

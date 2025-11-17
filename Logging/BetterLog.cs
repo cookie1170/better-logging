@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using Cookie.BetterLogging.Serialization;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -19,7 +18,10 @@ namespace Cookie.BetterLogging
     [PublicAPI]
     public static class BetterLog
     {
-        private const int DepthLimit = 5;
+        private const int DepthLimit = 8;
+        private const int MaxLogs = 256;
+        private const int ClearIfMaxAmount = 64;
+
         public static List<LogEntry> Logs = new();
         private static bool _justDebugLogged = false;
         public static event Action<LogEntry> OnLog;
@@ -57,50 +59,57 @@ namespace Cookie.BetterLogging
             [CallerLineNumber] int lineNumber = 0
         ) {
             string serializedObj = Serializer.Serialize(obj);
+            #if UNITY_EDITOR // avoid the expensive stuff if we're not in the editor and only serialize the object, as we're not gonna see them in the log files anyway 
             string stackTrace = FormatStackTrace(new StackTrace(true).ToString());
             LogInfo info = new(stackTrace, filePath, lineNumber);
             AddEntry(new LogEntry(GetLogFor(obj, info), DateTime.Now));
+            #endif
 
-            StringBuilder sb = new();
-            sb.AppendLine(serializedObj);
-            sb.AppendLine(stackTrace);
             _justDebugLogged = true;
-            Debug.Log(sb.ToString());
+            Debug.Log(serializedObj);
             _justDebugLogged = false;
         }
 
-        private static string FormatStackTrace(string originalTrace) {
-            string[] splitTrace = originalTrace.Split(Environment.NewLine)
-                .Where(s => !s.Contains("Cookie.BetterLogging.BetterLog.Log")).ToArray();
-            string trace = splitTrace.Aggregate((s1, s2) => s1 + Environment.NewLine + s2);
-            #if UNITY_EDITOR
-            return trace.Replace(Directory.GetCurrentDirectory(), ".");
-            #else
-            return trace;
-            #endif
-        }
-
         private static void AddEntry(LogEntry entry) {
+            if (Logs.Count >= MaxLogs) Logs.RemoveRange(0, Logs.Count - MaxLogs + ClearIfMaxAmount);
             Logs.Add(entry);
             OnLog?.Invoke(entry);
         }
 
-        private static LogNode GetLogFor(object obj, LogInfo info, int depth = 0, string label = null) {
-            if (depth > DepthLimit) return new LogNode(Serializer.Serialize(obj), info);
+        #if UNITY_EDITOR
+        private static string FormatStackTrace(string originalTrace) {
+            string[] splitTrace = originalTrace.Split(Environment.NewLine)
+                .Where(s => !s.Contains("Cookie.BetterLogging.BetterLog.Log")).ToArray();
+            string trace = splitTrace.Aggregate((s1, s2) => s1 + Environment.NewLine + s2);
+
+            return trace.Replace(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar, "");
+        }
+        #endif
+
+        private static LogNode GetLogFor(object obj, LogInfo info, int depth = DepthLimit, string prefix = null) {
+            #if !UNITY_EDITOR
+            return new LogNode(Serializer.Serialize(obj), info);
+        }
+            #else
+            if (depth < 0) return new LogNode(AddPrefix(Serializer.Serialize(obj), prefix), info);
             switch (obj) {
                 case string str:
-                    return new LogNode(str, info);
+                    return new LogNode(AddPrefix(str, prefix), info);
                 case Vector2 or Vector3 or Vector4 or Vector2Int or Vector3Int:
-                    return new LogNode(obj.ToString(), info);
+                    return new LogNode(AddPrefix(obj.ToString(), prefix), info);
             }
 
+            Type type = obj.GetType();
+
+            if (type.IsPrimitive) return new LogNode(AddPrefix(obj.ToString(), prefix), info);
+
             LogNode[] children = obj switch {
-                IDictionary dictionary => GetLogForDictionary(dictionary, info, depth + 1),
-                IEnumerable enumerable => GetLogForEnumerable(enumerable, info, depth + 1),
-                _ => GetLogForFields(obj, info, depth + 1),
+                IDictionary dictionary => GetLogForDictionary(dictionary, info, depth),
+                IEnumerable enumerable => GetLogForEnumerable(enumerable, info, depth),
+                _ => GetLogForFields(obj, info, depth),
             };
 
-            LogNode root = new(label ?? obj.GetType().Name, info, children);
+            LogNode root = new(AddPrefix(type.Name, prefix), info, children);
 
             return root;
         }
@@ -108,18 +117,27 @@ namespace Cookie.BetterLogging
         private static LogNode[] GetLogForEnumerable(IEnumerable enumerable, LogInfo info, int depth) {
             List<object> items = enumerable.Cast<object>().ToList();
 
-            List<LogNode> result = new();
+            List<LogNode> result = new(items.Count);
 
-            for (int i = 0; i < items.Count; i++) result.Add(GetLogFor(items[i], info, depth + 1, i.ToString()));
+            for (int i = 0; i < items.Count; i++) result.Add(GetLogFor(items[i], info, depth - 1, i.ToString()));
 
             return result.ToArray();
         }
 
-        private static LogNode[] GetLogForDictionary(IDictionary dictionary, LogInfo info, int depth) =>
-            throw new NotImplementedException();
+        private static LogNode[] GetLogForDictionary(IDictionary dictionary, LogInfo info, int depth) {
+            List<LogNode> result = new(dictionary.Count);
+
+            foreach (DictionaryEntry entry in dictionary)
+                result.Add(GetLogFor(entry.Value, info, depth - 1, Serializer.Serialize(entry.Key, 1)));
+
+            return result.ToArray();
+        }
 
         private static LogNode[] GetLogForFields(object o, object obj, int depth) =>
             throw new NotImplementedException();
+
+        private static string AddPrefix(string name, string prefix) => prefix == null ? name : $"{prefix}: {name}";
+        #endif
     }
 
     public struct LogEntry
@@ -138,7 +156,14 @@ namespace Cookie.BetterLogging
 
     public class LogNode
     {
+        /// <summary>
+        ///     The children of the node
+        /// </summary>
+        /// <remarks>
+        ///     This is always empty during runtime to avoid the expensive calculations
+        /// </remarks>
         [CanBeNull] public readonly IReadOnlyList<LogNode> Children;
+
         public readonly LogInfo Info;
         public string Label;
 

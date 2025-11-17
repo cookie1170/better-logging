@@ -38,7 +38,14 @@ namespace Cookie.BetterLogging.Tests
 
             Assert.AreEqual(Serializer.SerializeEnumerable(array), Serializer.Serialize(array), "Array");
             Assert.AreEqual(Serializer.SerializeEnumerable(list), Serializer.Serialize(list), "List");
-            Assert.AreEqual(Serializer.SerializeDictionary(dict), Serializer.SerializeDictionary(dict), "Dictionary");
+            Assert.AreEqual(Serializer.SerializeDictionary(dict), Serializer.Serialize(dict), "Dictionary");
+        }
+
+        [Test]
+        public void DepthLimit() {
+            int[][][] array = { new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } } };
+
+            Assert.AreNotEqual(Serializer.SerializeEnumerable(array, 2), Serializer.SerializeEnumerable(array, 1));
         }
     }
 }

@@ -10,9 +10,6 @@ namespace Cookie.BetterLogging.Samples
             var logger = (Logger)target;
 
             VisualElement root = new();
-            // PropertyField field = new() {
-            //     bindingPath = "list",
-            // };
 
             Foldout unityLog = new() { text = "Unity Log" };
             Foldout betterLog = new() { text = "Better Log" };
@@ -25,6 +22,10 @@ namespace Cookie.BetterLogging.Samples
                 text = "Unity Log Nested List",
             };
 
+            Button unityLogDictionary = new() {
+                text = "Unity Log Dictionary",
+            };
+
             Button betterLogList = new() {
                 text = "Better Log List",
             };
@@ -33,16 +34,24 @@ namespace Cookie.BetterLogging.Samples
                 text = "Better Log Nested List",
             };
 
+            Button betterLogDictionary = new() {
+                text = "Better Log Dictionary",
+            };
+
             unityLogList.clicked += () => logger.UnityLogList();
             unityLogNestedList.clicked += () => logger.UnityLogNestedList();
+            unityLogDictionary.clicked += () => logger.UnityLogDictionary();
             betterLogList.clicked += () => logger.BetterLogList();
             betterLogNestedList.clicked += () => logger.BetterLogNestedList();
+            betterLogDictionary.clicked += () => logger.BetterLogDictionary();
 
             // root.Add(field);
             unityLog.Add(unityLogList);
             unityLog.Add(unityLogNestedList);
+            unityLog.Add(unityLogDictionary);
             betterLog.Add(betterLogList);
             betterLog.Add(betterLogNestedList);
+            betterLog.Add(betterLogDictionary);
             root.Add(unityLog);
             root.Add(betterLog);
 

@@ -48,7 +48,3 @@ VisualElement {
 .entry-label {
     white-space: normal;
 }
-
-.entry-content {
-    margin: 8px;
-}

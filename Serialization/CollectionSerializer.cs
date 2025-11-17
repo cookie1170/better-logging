@@ -7,16 +7,16 @@ namespace Cookie.BetterLogging.Serialization
 {
     public static partial class Serializer
     {
-        public static string SerializeDictionary(IDictionary dictionary) {
+        public static string SerializeDictionary(IDictionary dictionary, int depth = DepthLimit) {
             if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
 
             StringBuilder sb = new();
             sb.Append("{ ");
             foreach (DictionaryEntry entry in dictionary) {
                 sb.Append("[");
-                sb.Append(entry.Key);
+                sb.Append(Serialize(entry.Key, 1));
                 sb.Append(": ");
-                sb.Append(entry.Value);
+                sb.Append(Serialize(entry.Value, depth - 1));
                 sb.Append("]");
                 sb.Append(", ");
             }
@@ -27,7 +27,7 @@ namespace Cookie.BetterLogging.Serialization
             return sb.ToString();
         }
 
-        public static string SerializeEnumerable(IEnumerable enumerable) {
+        public static string SerializeEnumerable(IEnumerable enumerable, int depth = DepthLimit) {
             if (enumerable == null) throw new ArgumentNullException(nameof(enumerable));
 
             StringBuilder sb = new();
@@ -35,7 +35,7 @@ namespace Cookie.BetterLogging.Serialization
             object[] array = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
 
             foreach (object element in array) {
-                sb.Append(Serialize(element));
+                sb.Append(Serialize(element, depth - 1));
                 sb.Append(", ");
             }
 
