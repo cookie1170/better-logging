@@ -9,14 +9,13 @@ using JetBrains.Annotations;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 #if UNITY_EDITOR
-using System.IO;
 using UnityEditor;
 #endif
 
 namespace Cookie.BetterLogging
 {
     [PublicAPI]
-    public static class BetterLog
+    public static partial class BetterLog
     {
         private const int DepthLimit = 8;
         private const int MaxLogs = 256;
@@ -59,7 +58,7 @@ namespace Cookie.BetterLogging
             [CallerLineNumber] int lineNumber = 0
         ) {
             string serializedObj = Serializer.Serialize(obj);
-            #if UNITY_EDITOR // avoid the expensive stuff if we're not in the editor and only serialize the object, as we're not gonna see them in the log files anyway 
+            #if UNITY_EDITOR // avoid the expensive stuff if we're not in the editor and only serialize the object, as we're not going to see them in the log files anyway 
             string stackTrace = FormatStackTrace(new StackTrace(true).ToString());
             LogInfo info = new(stackTrace, filePath, lineNumber);
             AddEntry(new LogEntry(GetLogFor(obj, info), DateTime.Now));
@@ -75,16 +74,6 @@ namespace Cookie.BetterLogging
             Logs.Add(entry);
             OnLog?.Invoke(entry);
         }
-
-        #if UNITY_EDITOR
-        private static string FormatStackTrace(string originalTrace) {
-            string[] splitTrace = originalTrace.Split(Environment.NewLine)
-                .Where(s => !s.Contains("Cookie.BetterLogging.BetterLog.Log")).ToArray();
-            string trace = splitTrace.Aggregate((s1, s2) => s1 + Environment.NewLine + s2);
-
-            return trace.Replace(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar, "");
-        }
-        #endif
 
         private static LogNode GetLogFor(object obj, LogInfo info, int depth = DepthLimit, string prefix = null) {
             #if !UNITY_EDITOR

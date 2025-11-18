@@ -32,9 +32,10 @@ VisualElement {
     flex-grow: 0;
     max-height: 90px;
     padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
     border-top-width: 1px;
     border-top-color: var(--unity-colors-default-border);
-    padding-left: 4px;
 }
 
 .stack-trace-label {
@@ -48,3 +49,8 @@ VisualElement {
 .entry-label {
     white-space: normal;
 }
+
+.link-cursor {
+    cursor: link;
+}
+

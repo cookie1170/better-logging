@@ -5,11 +5,13 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.UIElements.Experimental;
 
 namespace Cookie.BetterLogging.Editor
 {
     public class BetterConsoleWindow : EditorWindow
     {
+        private const string LinkCursorClassName = "link-cursor";
         private readonly HashSet<(int id, bool isExpanded, bool allChildren)> _expandedItems = new();
         private TreeView _currentEntriesContainer;
         private bool _isBeingRefreshed;
@@ -57,6 +59,11 @@ namespace Cookie.BetterLogging.Editor
 
             Label stackTraceLabel = new();
             stackTraceLabel.AddToClassList("stack-trace-label");
+            stackTraceLabel.RegisterCallback<PointerUpLinkTagEvent>(LinkOnPointerUp);
+
+            stackTraceLabel.RegisterCallback<PointerOverLinkTagEvent>(LinkOnPointerOver);
+
+            stackTraceLabel.RegisterCallback<PointerOutLinkTagEvent>(LinkOnPointerOut);
 
             stackTraceView.Add(stackTraceLabel);
 
@@ -91,6 +98,21 @@ namespace Cookie.BetterLogging.Editor
 
             return;
 
+
+            void LinkOnPointerUp(PointerUpLinkTagEvent evt) {
+                int separatorIndex = evt.linkID.LastIndexOf(':');
+                string path = evt.linkID[..separatorIndex];
+                int line = int.Parse(evt.linkID[(separatorIndex + 1)..]);
+                InternalEditorUtility.OpenFileAtLineExternal(path, line);
+            }
+
+            void LinkOnPointerOver(PointerOverLinkTagEvent evt) {
+                stackTraceLabel.AddToClassList(LinkCursorClassName);
+            }
+
+            void LinkOnPointerOut(PointerOutLinkTagEvent evt) {
+                stackTraceLabel.RemoveFromClassList(LinkCursorClassName);
+            }
 
             void OnEntrySelected(IEnumerable<int> selectedIndices) {
                 int[] indices = selectedIndices as int[] ?? selectedIndices.ToArray();
