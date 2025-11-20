@@ -23,7 +23,7 @@ namespace Cookie.BetterLogging.Tests
             };
 
             string serializedDictionary = Serializer.SerializeDictionary(dict);
-            Assert.AreEqual("{ [John: 1], [Alice: 3], [Bob: 5] }", serializedDictionary);
+            Assert.AreEqual("{ John: 1, Alice: 3, Bob: 5 }", serializedDictionary);
         }
 
         [Test]

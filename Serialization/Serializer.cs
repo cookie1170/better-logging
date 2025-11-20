@@ -9,7 +9,7 @@ namespace Cookie.BetterLogging.Serialization
         private const int DepthLimit = 8;
 
         public static string Serialize<T>(T obj, int depth = DepthLimit) {
-            if (Equals(obj, default(T))) return "null";
+            if (obj is null) return "null";
             if (depth < 0) return obj.ToString();
 
             return obj switch {

@@ -13,11 +13,9 @@ namespace Cookie.BetterLogging.Serialization
             StringBuilder sb = new();
             sb.Append("{ ");
             foreach (DictionaryEntry entry in dictionary) {
-                sb.Append("[");
                 sb.Append(Serialize(entry.Key, 1));
                 sb.Append(": ");
                 sb.Append(Serialize(entry.Value, depth - 1));
-                sb.Append("]");
                 sb.Append(", ");
             }
 

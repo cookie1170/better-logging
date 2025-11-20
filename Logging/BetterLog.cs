@@ -58,6 +58,7 @@ namespace Cookie.BetterLogging
             [CallerLineNumber] int lineNumber = 0
         ) {
             string serializedObj = Serializer.Serialize(obj);
+
             #if UNITY_EDITOR // avoid the expensive stuff if we're not in the editor and only serialize the object, as we're not going to see them in the log files anyway 
             string stackTrace = FormatStackTrace(new StackTrace(true).ToString());
             LogInfo info = new(stackTrace, filePath, lineNumber);
