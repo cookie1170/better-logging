@@ -1,6 +1,7 @@
-# better-log
-A better logging system for unity, that allows you to explore collections and objects in a tree-like structure.
-To use simply replace any `Debug.Log`s with `BetterLog.Log`s, open the better console window (Window -> Cookie -> Better Console)
+# better-logging
+A better logging system for Unity, that allows you to explore collections and objects in a tree-like structure.
+
+To use simply replace any `Debug.Log`s with `BetterLog.Log`s and open the better console window (Window -> Cookie -> Better Console)
 
 # WARNING
 It's currently in VERY early alpha: a lot of the features are missing and it's only a proof of concept as of right now
