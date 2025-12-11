@@ -148,16 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 064fcafddba811668b76c686f02945e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Cookie.BetterLogging.Samples.Logger
-  list:
-  - {x: 1.47, y: 0.93, z: 0.46}
-  - {x: 1.45, y: -1.66, z: -1.31}
-  - {x: -0.65, y: 1.43, z: 1.14}
-  - {x: -0.65, y: 1.43, z: 1.14}
-  - {x: -0.65, y: 1.43, z: 1.14}
-  - {x: -0.65, y: 1.43, z: 1.14}
-  - {x: -0.65, y: 1.43, z: 1.14}
-  - {x: -0.65, y: 1.43, z: 1.14}
-  - {x: -0.65, y: 1.43, z: 1.14}
+  logType: 3
 --- !u!4 &266871718
 Transform:
   m_ObjectHideFlags: 0

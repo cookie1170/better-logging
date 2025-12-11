@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace Cookie.BetterLogging.Samples
@@ -45,7 +46,8 @@ namespace Cookie.BetterLogging.Samples
             betterLogNestedList.clicked += () => logger.BetterLogNestedList();
             betterLogDictionary.clicked += () => logger.BetterLogDictionary();
 
-            // root.Add(field);
+            var typeField = new PropertyField(serializedObject.FindProperty("logType"));
+            root.Add(typeField);
             unityLog.Add(unityLogList);
             unityLog.Add(unityLogNestedList);
             unityLog.Add(unityLogDictionary);

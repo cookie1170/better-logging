@@ -11,17 +11,16 @@ namespace Cookie.BetterLogging.Editor
 {
     public class BetterConsoleWindow : EditorWindow
     {
+        private const string StylesheetPath = "Packages/com.cookie.better-logging/Editor/BetterConsoleStyle.uss";
         private const string LinkCursorClassName = "link-cursor";
         private readonly HashSet<(int id, bool isExpanded, bool allChildren)> _expandedItems = new();
-        private TreeView _currentEntriesContainer;
+        private TreeView _entries;
         private bool _isBeingRefreshed;
+        private bool _isVisible;
         private StyleSheet _styleSheet;
 
         private void OnEnable() {
-            if (!_styleSheet)
-                _styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(
-                    "Packages/com.cookie.better-logging/Editor/BetterConsoleStyle.uss"
-                );
+            if (!_styleSheet) _styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(StylesheetPath);
 
             rootVisualElement.styleSheets.Add(_styleSheet);
 
@@ -29,7 +28,8 @@ namespace Cookie.BetterLogging.Editor
         }
 
         private void OnDisable() {
-            _currentEntriesContainer = null;
+            _expandedItems?.Clear();
+            _entries = null;
             BetterLog.OnLog -= OnLog;
         }
 
@@ -67,37 +67,37 @@ namespace Cookie.BetterLogging.Editor
 
             stackTraceView.Add(stackTraceLabel);
 
-            if (_currentEntriesContainer != null) {
-                _currentEntriesContainer.itemsChosen -= OnEntryChosen;
-                _currentEntriesContainer.selectedIndicesChanged -= OnEntrySelected;
-                _currentEntriesContainer.itemExpandedChanged -= OnItemExpandedChanged;
+            if (_entries != null) {
+                _entries.itemsChosen -= OnEntryChosen;
+                _entries.selectedIndicesChanged -= OnEntrySelected;
+                _entries.itemExpandedChanged -= OnItemExpandedChanged;
             }
 
-            _currentEntriesContainer = new TreeView {
+            _entries = new TreeView {
                 makeItem = MakeItem,
                 selectionType = SelectionType.Single,
                 showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
                 virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight,
             };
 
-            _currentEntriesContainer.bindItem = (element, i) => {
-                ((Label)element).text = _currentEntriesContainer.GetItemDataForIndex<LogNode>(i).Label;
+            _entries.bindItem = (element, i) => {
+                ((Label)element).text = _entries.GetItemDataForIndex<LogNode>(i).Label;
             };
 
-            _currentEntriesContainer.itemsChosen += OnEntryChosen;
-            _currentEntriesContainer.selectedIndicesChanged += OnEntrySelected;
-            _currentEntriesContainer.itemExpandedChanged += OnItemExpandedChanged;
+            _entries.itemsChosen += OnEntryChosen;
+            _entries.selectedIndicesChanged += OnEntrySelected;
+            _entries.itemExpandedChanged += OnItemExpandedChanged;
 
-            _currentEntriesContainer.AddToClassList("entries");
+            _entries.AddToClassList("entries");
 
             rootVisualElement.Add(topBar);
-            rootVisualElement.Add(_currentEntriesContainer);
+            rootVisualElement.Add(_entries);
             rootVisualElement.Add(stackTraceContainer);
 
             UpdateStackTraceDisplay();
+            Refresh();
 
             return;
-
 
             void LinkOnPointerUp(PointerUpLinkTagEvent evt) {
                 int separatorIndex = evt.linkID.LastIndexOf(':');
@@ -125,7 +125,7 @@ namespace Cookie.BetterLogging.Editor
                 }
 
                 int index = indices.FirstOrDefault();
-                selectedEntry = _currentEntriesContainer?.GetItemDataForIndex<LogNode>(index);
+                selectedEntry = _entries?.GetItemDataForIndex<LogNode>(index);
 
                 UpdateStackTraceDisplay();
             }
@@ -143,6 +143,14 @@ namespace Cookie.BetterLogging.Editor
             void UpdateStackTraceDisplay() {
                 stackTraceLabel.text = selectedEntry?.Info.StackTrace ?? "No entry selected";
             }
+        }
+
+        private void OnBecameInvisible() {
+            _isVisible = false;
+        }
+
+        private void OnBecameVisible() {
+            _isVisible = true;
         }
 
         private void OnItemExpandedChanged(TreeViewExpansionChangedArgs args) {
@@ -179,7 +187,7 @@ namespace Cookie.BetterLogging.Editor
         }
 
         private void Refresh() {
-            if (_currentEntriesContainer == null) return;
+            if (_entries == null) return;
 
             List<TreeViewItemData<LogNode>> data = new(BetterLog.Logs.Count);
 
@@ -187,28 +195,28 @@ namespace Cookie.BetterLogging.Editor
             for (int i = 0; i < BetterLog.Logs.Count; i++)
                 data.Add(GetTreeViewItemData(BetterLog.Logs[i].Content, ref indexOffset));
 
-            _currentEntriesContainer.SetRootItems(data);
+            _entries.SetRootItems(data);
             _isBeingRefreshed = true;
 
             foreach ((int id, bool isExpanded, bool allChildren) item in _expandedItems) {
                 if (item.isExpanded)
-                    _currentEntriesContainer.ExpandItem(item.id, item.allChildren, false);
+                    _entries.ExpandItem(item.id, item.allChildren, false);
                 else
-                    _currentEntriesContainer.CollapseItem(item.id, item.allChildren, false);
+                    _entries.CollapseItem(item.id, item.allChildren, false);
             }
 
-            _currentEntriesContainer.RefreshItems();
+            _entries.RefreshItems();
 
             _isBeingRefreshed = false;
 
-            if (BetterLog.Logs.Count > 0) _currentEntriesContainer.ScrollToItem(-1);
+            if (BetterLog.Logs.Count > 0 && _isVisible) _entries.ScrollToItem(-1);
         }
 
 
         private static TreeViewItemData<LogNode> GetTreeViewItemData(LogNode item, ref int indexOffset) {
             int index = 0 + indexOffset;
 
-            TreeViewItemData<LogNode> result = Process(item);
+            var result = Process(item);
             indexOffset = index + 1;
 
             return result;

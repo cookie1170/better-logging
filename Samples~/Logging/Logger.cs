@@ -5,6 +5,8 @@ namespace Cookie.BetterLogging.Samples
 {
     public class Logger : MonoBehaviour
     {
+        [SerializeField] private LogType logType = LogType.Log;
+
         private readonly Dictionary<string, float> _dictionary = new() {
             { "John", 10.5f },
             { "Bob", -15f },
@@ -25,27 +27,27 @@ namespace Cookie.BetterLogging.Samples
         };
 
         public void UnityLogList() {
-            Debug.Log(_list);
+            Debug.unityLogger.Log(logType, _list);
         }
 
         public void UnityLogNestedList() {
-            Debug.Log(_nestedList);
+            Debug.unityLogger.Log(logType, _nestedList);
         }
 
         public void UnityLogDictionary() {
-            Debug.Log(_dictionary);
+            Debug.unityLogger.Log(logType, _dictionary);
         }
 
         public void BetterLogList() {
-            BetterLog.Log(_list);
+            BetterLog.Log(_list, logType);
         }
 
         public void BetterLogNestedList() {
-            BetterLog.Log(_nestedList);
+            BetterLog.Log(_nestedList, logType);
         }
 
         public void BetterLogDictionary() {
-            BetterLog.Log(_dictionary);
+            BetterLog.Log(_dictionary, logType);
         }
     }
 }
