@@ -24,34 +24,41 @@ namespace Cookie.BetterLogging
         public static event Action<LogEntry> OnLog;
 
         [InitializeOnLoadMethod]
-        private static void Init() {
+        private static void Init()
+        {
             Application.logMessageReceived -= OnLogMessageReceived;
             Application.logMessageReceived += OnLogMessageReceived;
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             EditorApplication.playModeStateChanged -= OnPlaymodeStateChanged;
             EditorApplication.playModeStateChanged += OnPlaymodeStateChanged;
-            #endif
+#endif
         }
 
-        private static void OnLogMessageReceived(string message, string stackTrace, LogType type) {
-            if (_justDebugLogged) return;
+        private static void OnLogMessageReceived(string message, string stackTrace, LogType type)
+        {
+            if (_justDebugLogged)
+                return;
 
             var logInfo = new LogInfo(type, stackTrace);
             AddEntry(new LogEntry(GetLogFor(message, logInfo), DateTime.Now));
         }
 
-        #if UNITY_EDITOR
-        private static void OnPlaymodeStateChanged(PlayModeStateChange playModeStateChange) {
-            if (playModeStateChange != PlayModeStateChange.ExitingPlayMode) return;
+#if UNITY_EDITOR
+        private static void OnPlaymodeStateChanged(PlayModeStateChange playModeStateChange)
+        {
+            if (playModeStateChange != PlayModeStateChange.ExitingPlayMode)
+                return;
 
             _justDebugLogged = false;
             Logs.Clear();
         }
-        #endif
+#endif
 
-        private static void AddEntry(LogEntry entry) {
-            if (Logs.Count >= MaxLogs) Logs.RemoveRange(0, Logs.Count - MaxLogs + ClearIfMaxAmount);
+        private static void AddEntry(LogEntry entry)
+        {
+            if (Logs.Count >= MaxLogs)
+                Logs.RemoveRange(0, Logs.Count - MaxLogs + ClearIfMaxAmount);
             Logs.Add(entry);
             OnLog?.Invoke(entry);
         }
@@ -60,7 +67,8 @@ namespace Cookie.BetterLogging
             object obj,
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0
-        ) {
+        )
+        {
             Log(obj, LogType.Warning, filePath, lineNumber);
         }
 
@@ -68,7 +76,8 @@ namespace Cookie.BetterLogging
             object obj,
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0
-        ) {
+        )
+        {
             Log(obj, LogType.Error, filePath, lineNumber);
         }
 
@@ -76,7 +85,8 @@ namespace Cookie.BetterLogging
             object obj,
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0
-        ) {
+        )
+        {
             Log(obj, LogType.Assert, filePath, lineNumber);
         }
 
@@ -84,7 +94,8 @@ namespace Cookie.BetterLogging
             object obj,
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0
-        ) {
+        )
+        {
             Log(obj, LogType.Exception, filePath, lineNumber);
         }
 
@@ -93,16 +104,17 @@ namespace Cookie.BetterLogging
             LogType type = LogType.Log,
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0
-        ) {
+        )
+        {
             string serializedObj = Serializer.Serialize(obj);
 
-            #if UNITY_EDITOR // avoid the expensive stuff if we're not in the editor and only serialize the object, as we're not going to see them in the log files anyway 
+#if UNITY_EDITOR // avoid the expensive stuff if we're not in the editor and only serialize the object, as we're not going to see them in the log files anyway
 
             string stackTrace = FormatStackTrace(new StackTrace(true).ToString());
             LogInfo info = new(type, stackTrace, filePath, lineNumber);
             AddEntry(new LogEntry(GetLogFor(obj, info), DateTime.Now));
 
-            #endif
+#endif
 
             _justDebugLogged = true;
             Debug.unityLogger.Log(type, serializedObj);

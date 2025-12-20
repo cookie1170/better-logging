@@ -8,22 +8,26 @@ namespace Cookie.BetterLogging
 {
     public static partial class BetterLog
     {
-        #if UNITY_EDITOR // don't need the stack trace outside the editor
+#if UNITY_EDITOR // don't need the stack trace outside the editor
         /// <summary>
         ///     The path that shows up as the directory for unity's internal scripts in the stack trace
         /// </summary>
         private const string UnityBuildOutputPath = "/home/bokken/build/output";
 
-        private static string FormatStackTrace(string originalTrace) {
+        private static string FormatStackTrace(string originalTrace)
+        {
             List<string> formattedTrace = new();
             bool didAddInternalsText = false;
             string[] splitTrace = originalTrace.Split(Environment.NewLine);
 
-            foreach (string s in splitTrace) {
-                if (s.Contains("Cookie.BetterLogging.BetterLog.Log")) continue;
+            foreach (string s in splitTrace)
+            {
+                if (s.Contains("Cookie.BetterLogging.BetterLog.Log"))
+                    continue;
 
                 string formatted = FormatProjectPath(s, out bool isInternal);
-                if (isInternal && !didAddInternalsText) {
+                if (isInternal && !didAddInternalsText)
+                {
                     didAddInternalsText = true;
                     formattedTrace.Add("");
                     formattedTrace.Add("<b>Unity internals</b>");
@@ -32,21 +36,23 @@ namespace Cookie.BetterLogging
                 formattedTrace.Add(formatted);
             }
 
-
             string trace = formattedTrace.Aggregate((s1, s2) => s1 + Environment.NewLine + s2);
 
             return trace;
         }
 
-        private static string FormatProjectPath(string s, out bool isInternal) {
+        private static string FormatProjectPath(string s, out bool isInternal)
+        {
             isInternal = false;
             string dir = Directory.GetCurrentDirectory();
             int dirIndex = s.IndexOf(dir, StringComparison.Ordinal);
 
-            if (dirIndex == -1) {
+            if (dirIndex == -1)
+            {
                 int unityBuildOutput = s.IndexOf(UnityBuildOutputPath, StringComparison.Ordinal);
 
-                if (unityBuildOutput == -1) return s;
+                if (unityBuildOutput == -1)
+                    return s;
 
                 StringBuilder sbUnity = new(s);
                 sbUnity.Remove(unityBuildOutput, s.Length - unityBuildOutput);
@@ -67,6 +73,6 @@ namespace Cookie.BetterLogging
 
             return sb.ToString();
         }
-        #endif
+#endif
     }
 }

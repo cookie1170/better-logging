@@ -8,11 +8,15 @@ namespace Cookie.BetterLogging.Serialization
     {
         private const int DepthLimit = 8;
 
-        public static string Serialize<T>(T obj, int depth = DepthLimit) {
-            if (obj is null) return "null";
-            if (depth < 0) return obj.ToString();
+        public static string Serialize<T>(T obj, int depth = DepthLimit)
+        {
+            if (obj is null)
+                return "null";
+            if (depth < 0)
+                return obj.ToString();
 
-            return obj switch {
+            return obj switch
+            {
                 string str => str,
                 IDictionary dictionary => SerializeDictionary(dictionary, depth),
                 IEnumerable enumerable => SerializeEnumerable(enumerable, depth),

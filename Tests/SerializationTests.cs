@@ -7,7 +7,8 @@ namespace Cookie.BetterLogging.Tests
     public class SerializationTests
     {
         [Test]
-        public void SerializeEnumerable() {
+        public void SerializeEnumerable()
+        {
             int[] array = { 1, 5, 2, 3 };
             string serializedArray = Serializer.SerializeEnumerable(array);
 
@@ -15,8 +16,10 @@ namespace Cookie.BetterLogging.Tests
         }
 
         [Test]
-        public void SerializeDictionary() {
-            Dictionary<string, int> dict = new() {
+        public void SerializeDictionary()
+        {
+            Dictionary<string, int> dict = new()
+            {
                 { "John", 1 },
                 { "Alice", 3 },
                 { "Bob", 5 },
@@ -27,25 +30,43 @@ namespace Cookie.BetterLogging.Tests
         }
 
         [Test]
-        public void TypeRecognition() {
+        public void TypeRecognition()
+        {
             int[] array = { 1, 4, 8, 10 };
             List<int> list = new() { 5, 12, 59 };
-            Dictionary<string, int> dict = new() {
+            Dictionary<string, int> dict = new()
+            {
                 { "John", 1 },
                 { "Alice", 3 },
                 { "Bob", 5 },
             };
 
-            Assert.AreEqual(Serializer.SerializeEnumerable(array), Serializer.Serialize(array), "Array");
-            Assert.AreEqual(Serializer.SerializeEnumerable(list), Serializer.Serialize(list), "List");
-            Assert.AreEqual(Serializer.SerializeDictionary(dict), Serializer.Serialize(dict), "Dictionary");
+            Assert.AreEqual(
+                Serializer.SerializeEnumerable(array),
+                Serializer.Serialize(array),
+                "Array"
+            );
+            Assert.AreEqual(
+                Serializer.SerializeEnumerable(list),
+                Serializer.Serialize(list),
+                "List"
+            );
+            Assert.AreEqual(
+                Serializer.SerializeDictionary(dict),
+                Serializer.Serialize(dict),
+                "Dictionary"
+            );
         }
 
         [Test]
-        public void DepthLimit() {
+        public void DepthLimit()
+        {
             int[][][] array = { new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } } };
 
-            Assert.AreNotEqual(Serializer.SerializeEnumerable(array, 2), Serializer.SerializeEnumerable(array, 1));
+            Assert.AreNotEqual(
+                Serializer.SerializeEnumerable(array, 2),
+                Serializer.SerializeEnumerable(array, 1)
+            );
         }
     }
 }
