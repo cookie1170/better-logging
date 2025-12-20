@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace Cookie.BetterLogging.Samples
 {
     [CustomEditor(typeof(Logger))]
-    public class LoggerEditor : UnityEditor.Editor
+    public class LoggerEditor : Editor
     {
         public override VisualElement CreateInspectorGUI()
         {

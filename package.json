@@ -1,19 +1,19 @@
 {
-  "name": "com.cookie.better-logging",
-  "version": "0.3.0",
-  "displayName": "Better Logging",
-  "description": "A better logging system for Unity, similar to the JavaScript console in your browser",
-  "unity": "6000.2",
-  "dependencies": {},
-  "author": {
-    "name": "Cookie",
-    "url": "https://github.com/cookie1170/"
-  },
-  "samples": [
-    {
-      "displayName": "Logging",
-      "description": "A sample demonstrating the different value types that can be logged",
-      "path": "Samples~/Logging"
-    }
-  ]
+	"name": "com.cookie.better-logging",
+	"version": "0.3.0",
+	"displayName": "Better Logging",
+	"description": "A better logging system for Unity, similar to the JavaScript console in your browser",
+	"unity": "6000.2",
+	"dependencies": {},
+	"author": {
+		"name": "Cookie",
+		"url": "https://github.com/cookie1170/"
+	},
+	"samples": [
+		{
+			"displayName": "Logging",
+			"description": "A sample demonstrating the different value types that can be logged",
+			"path": "Samples/Logging"
+		}
+	]
 }

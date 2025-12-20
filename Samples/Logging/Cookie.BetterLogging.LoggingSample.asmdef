@@ -1,0 +1,16 @@
+{
+    "name": "Cookie.BetterLogging.LoggingSample",
+    "rootNamespace": "Cookie.BetterLogging.Samples",
+    "references": [
+        "Cookie.BetterLogging.Logging"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
