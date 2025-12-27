@@ -13,7 +13,7 @@
 		{
 			"displayName": "Logging",
 			"description": "A sample demonstrating the different value types that can be logged",
-			"path": "Samples/Logging"
+			"path": "Samples~/Logging"
 		}
 	]
 }
