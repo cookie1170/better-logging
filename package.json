@@ -1,6 +1,6 @@
 {
 	"name": "com.cookie.better-logging",
-	"version": "0.3.2",
+	"version": "0.4.0",
 	"displayName": "Better Logging",
 	"description": "A better logging system for Unity, similar to the JavaScript console in your browser",
 	"unity": "6000.2",
