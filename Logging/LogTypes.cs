@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -79,6 +80,17 @@ namespace Cookie.BetterLogging
             Label = label;
             Info = info;
             Children = children ?? Array.Empty<LogNode>();
+        }
+
+        public bool MatchesSearchQuery(string searchQuery)
+        {
+            if (Label.Contains(searchQuery))
+                return true;
+
+            if (Children.Count <= 0)
+                return false;
+
+            return Children.Any(c => c.MatchesSearchQuery(searchQuery));
         }
     }
 }

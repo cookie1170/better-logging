@@ -23,9 +23,10 @@ namespace Cookie.BetterLogging.Editor
         private readonly HashSet<(int id, bool isExpanded, bool allChildren)> _expandedItems =
             new();
         private TreeView _entries;
+        private StyleSheet _styleSheet;
         private bool _isBeingRefreshed;
         private bool _isVisible;
-        private StyleSheet _styleSheet;
+        private string _searchQuery = "";
 
         private void OnEnable()
         {
@@ -72,8 +73,14 @@ namespace Cookie.BetterLogging.Editor
                         : DropdownMenuAction.Status.Normal
             );
 
+            ToolbarSpacer spacer = new() { style = { flexGrow = 1f } };
+            ToolbarSearchField search = new();
+            search.RegisterValueChangedCallback(OnSearch);
+
             toolbar.Add(clearButton);
             toolbar.Add(clearOn);
+            toolbar.Add(spacer);
+            toolbar.Add(search);
 
             VisualElement stackTraceContainer = new();
             stackTraceContainer.AddToClassList(StackTrace);
@@ -201,6 +208,12 @@ namespace Cookie.BetterLogging.Editor
             }
         }
 
+        private void OnSearch(ChangeEvent<string> evt)
+        {
+            _searchQuery = evt.newValue;
+            Refresh();
+        }
+
         private void OnBecameInvisible()
         {
             _isVisible = false;
@@ -271,17 +284,25 @@ namespace Cookie.BetterLogging.Editor
 
             int indexOffset = 0;
             for (int i = 0; i < LogStorage.instance.Logs.Count; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(_searchQuery))
+                {
+                    if (!LogStorage.instance.Logs[i].Content.MatchesSearchQuery(_searchQuery))
+                        continue;
+                }
+
                 data.Add(GetTreeViewItemData(LogStorage.instance.Logs[i].Content, ref indexOffset));
+            }
 
             _entries.SetRootItems(data);
             _isBeingRefreshed = true;
 
-            foreach ((int id, bool isExpanded, bool allChildren) item in _expandedItems)
+            foreach ((int id, bool isExpanded, bool allChildren) in _expandedItems)
             {
-                if (item.isExpanded)
-                    _entries.ExpandItem(item.id, item.allChildren, false);
+                if (isExpanded)
+                    _entries.ExpandItem(id, allChildren, false);
                 else
-                    _entries.CollapseItem(item.id, item.allChildren, false);
+                    _entries.CollapseItem(id, allChildren, false);
             }
 
             _entries.RefreshItems();
