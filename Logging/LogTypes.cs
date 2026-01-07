@@ -84,7 +84,7 @@ namespace Cookie.BetterLogging
 
         public bool MatchesSearchQuery(string searchQuery)
         {
-            if (Label.Contains(searchQuery))
+            if (Label.Contains(searchQuery, StringComparison.InvariantCultureIgnoreCase))
                 return true;
 
             if (Children.Count <= 0)
