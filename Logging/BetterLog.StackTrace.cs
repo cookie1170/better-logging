@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,8 +15,10 @@ namespace Cookie.BetterLogging
         /// </summary>
         private const string UnityBuildOutputPath = "/home/bokken/build/output";
 
-        private static string FormatStackTrace(string originalTrace)
+        private static string FormatStackTrace(StackTrace trace)
         {
+            string originalTrace = trace.ToString();
+
             List<string> formattedTrace = new();
             bool didAddInternalsText = false;
             string[] splitTrace = originalTrace.Split(Environment.NewLine);
@@ -36,9 +39,9 @@ namespace Cookie.BetterLogging
                 formattedTrace.Add(formatted);
             }
 
-            string trace = formattedTrace.Aggregate((s1, s2) => s1 + Environment.NewLine + s2);
+            string result = formattedTrace.Aggregate((s1, s2) => s1 + Environment.NewLine + s2);
 
-            return trace;
+            return result;
         }
 
         private static string FormatProjectPath(string s, out bool isInternal)

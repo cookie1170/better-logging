@@ -28,12 +28,15 @@ namespace Cookie.BetterLogging.Samples
 
             Button betterLogDictionary = new() { text = "Better Log Dictionary" };
 
+            Button betterLogFormatString = new() { text = "Better Log Format String" };
+
             unityLogList.clicked += () => logger.UnityLogList();
             unityLogNestedList.clicked += () => logger.UnityLogNestedList();
             unityLogDictionary.clicked += () => logger.UnityLogDictionary();
             betterLogList.clicked += () => logger.BetterLogList();
             betterLogNestedList.clicked += () => logger.BetterLogNestedList();
             betterLogDictionary.clicked += () => logger.BetterLogDictionary();
+            betterLogFormatString.clicked += () => logger.BetterLogFormatString();
 
             var typeField = new PropertyField(serializedObject.FindProperty("logType"));
             root.Add(typeField);
@@ -43,6 +46,7 @@ namespace Cookie.BetterLogging.Samples
             betterLog.Add(betterLogList);
             betterLog.Add(betterLogNestedList);
             betterLog.Add(betterLogDictionary);
+            betterLog.Add(betterLogFormatString);
             root.Add(unityLog);
             root.Add(betterLog);
 

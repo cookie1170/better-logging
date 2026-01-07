@@ -128,7 +128,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 266871718}
-  - component: {fileID: 266871717}
+  - component: {fileID: 266871719}
   m_Layer: 0
   m_Name: Logger
   m_TagString: Untagged
@@ -136,19 +136,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &266871717
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 266871716}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 064fcafddba811668b76c686f02945e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Cookie.BetterLogging.Samples.Logger
-  logType: 3
 --- !u!4 &266871718
 Transform:
   m_ObjectHideFlags: 0
@@ -164,6 +151,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &266871719
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 266871716}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff99572c633d410d7bb3aa7b76d9601a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Cookie.BetterLogging.LoggingSample::Cookie.BetterLogging.Samples.Logger
+  logType: 3
 --- !u!1 &1467662620
 GameObject:
   m_ObjectHideFlags: 0

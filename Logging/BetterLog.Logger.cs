@@ -47,6 +47,24 @@ namespace Cookie.BetterLogging
             return root;
         }
 
+        private static LogEntry GetFormatLog(string format, object[] args, LogInfo info)
+        {
+            LogEntry entry;
+            LogNode[] children = new LogNode[args.Length];
+            string[] formatArgs = new string[args.Length]; // we're gonna replace {0} with (0) beacuse i think it looks prettier
+            for (int i = 0; i < args.Length; i++)
+            {
+                LogNode child = GetLogFor(args[i], info, DepthLimit, i.ToString());
+                children[i] = child;
+                formatArgs[i] = $"({i})";
+            }
+
+            LogNode content = new(string.Format(format, formatArgs), info, children);
+
+            entry = new(content, DateTime.Now);
+            return entry;
+        }
+
         private static LogNode[] GetLogForEnumerable(
             IEnumerable enumerable,
             LogInfo info,

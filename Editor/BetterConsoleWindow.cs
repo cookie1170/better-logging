@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -9,11 +10,16 @@ using UnityEngine.UIElements.Experimental;
 
 namespace Cookie.BetterLogging.Editor
 {
+    [EditorWindowTitle(title = "Better Console")]
     public class BetterConsoleWindow : EditorWindow
     {
         private const string StylesheetPath =
             "Packages/com.cookie.better-logging/Editor/BetterConsoleStyle.uss";
-        private const string LinkCursorClassName = "link-cursor";
+        private const string LinkCursor = "link-cursor";
+        private const string StackTrace = "stack-trace";
+        private const string StackTraceFoldout = "stack-trace-foldout";
+        private const string StackTraceView = "stack-trace-view";
+        private const string StackTraceLabel = "stack-trace-label";
         private readonly HashSet<(int id, bool isExpanded, bool allChildren)> _expandedItems =
             new();
         private TreeView _entries;
@@ -28,41 +34,60 @@ namespace Cookie.BetterLogging.Editor
 
             rootVisualElement.styleSheets.Add(_styleSheet);
 
-            BetterLog.OnLog += OnLog;
+            LogStorage.instance.LogReceived += OnLog;
+            LogStorage.instance.Cleared += Refresh;
         }
 
         private void OnDisable()
         {
             _expandedItems?.Clear();
             _entries = null;
-            BetterLog.OnLog -= OnLog;
+            LogStorage.instance.LogReceived -= OnLog;
+            LogStorage.instance.Cleared -= Refresh;
         }
 
         private void CreateGUI()
         {
             LogNode selectedEntry = null;
 
-            VisualElement topBar = new();
-            topBar.AddToClassList("top-bar");
+            Toolbar toolbar = new();
 
-            Button clearButton = new(Clear) { text = "Clear" };
-            clearButton.AddToClassList("top-bar-button");
+            ToolbarButton clearButton = new(Clear) { text = "Clear" };
 
-            topBar.Add(clearButton);
+            ToolbarMenu clearOn = new();
+            clearOn.menu.AppendAction(
+                "Clear on play",
+                (a) => LogStorage.instance.clearOnPlay = !LogStorage.instance.clearOnPlay,
+                (a) =>
+                    LogStorage.instance.clearOnPlay
+                        ? DropdownMenuAction.Status.Checked
+                        : DropdownMenuAction.Status.Normal
+            );
+            clearOn.menu.AppendAction(
+                "Clear on recompile",
+                (a) => LogStorage.instance.clearOnRecompile = !LogStorage.instance.clearOnRecompile,
+                (a) =>
+                    LogStorage.instance.clearOnRecompile
+                        ? DropdownMenuAction.Status.Checked
+                        : DropdownMenuAction.Status.Normal
+            );
+
+            toolbar.Add(clearButton);
+            toolbar.Add(clearOn);
 
             VisualElement stackTraceContainer = new();
-            stackTraceContainer.AddToClassList("stack-trace");
+            stackTraceContainer.AddToClassList(StackTrace);
 
             Foldout stackTraceFoldout = new() { text = "<b>Stack Trace</b>", value = false };
-            stackTraceFoldout.AddToClassList("stack-trace-foldout");
+            stackTraceFoldout.AddToClassList(StackTraceFoldout);
             stackTraceContainer.Add(stackTraceFoldout);
 
             ScrollView stackTraceView = new();
-            stackTraceView.AddToClassList("stack-trace-view");
+            stackTraceView.AddToClassList(StackTraceView);
             stackTraceFoldout.Add(stackTraceView);
 
             Label stackTraceLabel = new();
-            stackTraceLabel.AddToClassList("stack-trace-label");
+            stackTraceLabel.AddToClassList(StackTraceLabel);
             stackTraceLabel.RegisterCallback<PointerUpLinkTagEvent>(LinkOnPointerUp);
 
             stackTraceLabel.RegisterCallback<PointerOverLinkTagEvent>(LinkOnPointerOver);
@@ -97,7 +122,7 @@ namespace Cookie.BetterLogging.Editor
 
             _entries.AddToClassList("entries");
 
-            rootVisualElement.Add(topBar);
+            rootVisualElement.Add(toolbar);
             rootVisualElement.Add(_entries);
             rootVisualElement.Add(stackTraceContainer);
 
@@ -116,12 +141,12 @@ namespace Cookie.BetterLogging.Editor
 
             void LinkOnPointerOver(PointerOverLinkTagEvent evt)
             {
-                stackTraceLabel.AddToClassList(LinkCursorClassName);
+                stackTraceLabel.AddToClassList(LinkCursor);
             }
 
             void LinkOnPointerOut(PointerOutLinkTagEvent evt)
             {
-                stackTraceLabel.RemoveFromClassList(LinkCursorClassName);
+                stackTraceLabel.RemoveFromClassList(LinkCursor);
             }
 
             void OnEntrySelected(IEnumerable<int> selectedIndices)
@@ -150,11 +175,24 @@ namespace Cookie.BetterLogging.Editor
                     return;
 
                 LogInfo info = ((LogNode)chosenItem).Info;
-                if (info is { FilePath: not null, LineNumber: not null })
+                if (info is not { FilePath: not null, LineNumber: not null })
+                    return;
+
+                if (info.Column is not null)
+                {
+                    InternalEditorUtility.OpenFileAtLineExternal(
+                        info.FilePath,
+                        (int)info.LineNumber,
+                        (int)info.Column
+                    );
+                }
+                else
+                {
                     InternalEditorUtility.OpenFileAtLineExternal(
                         info.FilePath,
                         (int)info.LineNumber
                     );
+                }
             }
 
             void UpdateStackTraceDisplay()
@@ -215,9 +253,8 @@ namespace Cookie.BetterLogging.Editor
 
         private void Clear()
         {
-            BetterLog.Logs.Clear();
             _expandedItems.Clear();
-            Refresh();
+            LogStorage.instance.Clear();
         }
 
         private void OnLog(LogEntry _)
@@ -230,11 +267,11 @@ namespace Cookie.BetterLogging.Editor
             if (_entries == null)
                 return;
 
-            List<TreeViewItemData<LogNode>> data = new(BetterLog.Logs.Count);
+            List<TreeViewItemData<LogNode>> data = new(LogStorage.instance.Logs.Count);
 
             int indexOffset = 0;
-            for (int i = 0; i < BetterLog.Logs.Count; i++)
-                data.Add(GetTreeViewItemData(BetterLog.Logs[i].Content, ref indexOffset));
+            for (int i = 0; i < LogStorage.instance.Logs.Count; i++)
+                data.Add(GetTreeViewItemData(LogStorage.instance.Logs[i].Content, ref indexOffset));
 
             _entries.SetRootItems(data);
             _isBeingRefreshed = true;
@@ -251,7 +288,7 @@ namespace Cookie.BetterLogging.Editor
 
             _isBeingRefreshed = false;
 
-            if (BetterLog.Logs.Count > 0 && _isVisible)
+            if (LogStorage.instance.Logs.Count > 0 && _isVisible)
                 _entries.ScrollToItem(-1);
         }
 
@@ -287,7 +324,7 @@ namespace Cookie.BetterLogging.Editor
         [MenuItem("Window/Cookie/Better Console")]
         public static void OpenWindow()
         {
-            CreateWindow<BetterConsoleWindow>("Better Console", Type.GetType("ConsoleWindow"));
+            CreateWindow<BetterConsoleWindow>(Type.GetType("ConsoleWindow"));
         }
     }
 }

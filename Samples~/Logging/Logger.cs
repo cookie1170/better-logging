@@ -46,17 +46,28 @@ namespace Cookie.BetterLogging.Samples
 
         public void BetterLogList()
         {
-            BetterLog.Log(_list, logType);
+            BetterLog.Log(logType, _list);
         }
 
         public void BetterLogNestedList()
         {
-            BetterLog.Log(_nestedList, logType);
+            BetterLog.Log(logType, _nestedList);
         }
 
         public void BetterLogDictionary()
         {
-            BetterLog.Log(_dictionary, logType);
+            BetterLog.Log(logType, _dictionary);
+        }
+
+        public void BetterLogFormatString()
+        {
+            BetterLog.Log(
+                logType,
+                "List: {0}, Nested list: {1}, Dictionary: {2}",
+                _list,
+                _nestedList,
+                _dictionary
+            );
         }
     }
 }

@@ -1,7 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using Cookie.BetterLogging.Serialization;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -16,12 +15,9 @@ namespace Cookie.BetterLogging
     public static partial class BetterLog
     {
         private const int DepthLimit = 8;
-        private const int MaxLogs = 512;
-        private const int ClearIfMaxAmount = 64;
 
-        public static List<LogEntry> Logs = new();
         private static bool _justDebugLogged = false;
-        public static event Action<LogEntry> OnLog;
+        public static event Action<LogEntry> LogReceived;
 
         [InitializeOnLoadMethod]
         private static void Init()
@@ -41,7 +37,7 @@ namespace Cookie.BetterLogging
                 return;
 
             var logInfo = new LogInfo(type, stackTrace);
-            AddEntry(new LogEntry(GetLogFor(message, logInfo), DateTime.Now));
+            LogEntry(new LogEntry(GetLogFor(message, logInfo), DateTime.Now));
         }
 
 #if UNITY_EDITOR
@@ -51,73 +47,54 @@ namespace Cookie.BetterLogging
                 return;
 
             _justDebugLogged = false;
-            Logs.Clear();
         }
 #endif
 
-        private static void AddEntry(LogEntry entry)
-        {
-            if (Logs.Count >= MaxLogs)
-                Logs.RemoveRange(0, Logs.Count - MaxLogs + ClearIfMaxAmount);
-            Logs.Add(entry);
-            OnLog?.Invoke(entry);
-        }
+        private static void LogEntry(LogEntry entry) => LogReceived?.Invoke(entry);
 
-        public static void LogWarning(
-            object obj,
-            [CallerFilePath] string filePath = "",
-            [CallerLineNumber] int lineNumber = 0
-        )
-        {
-            Log(obj, LogType.Warning, filePath, lineNumber);
-        }
+        public static void Log(LogType type, object obj) => Log(type, "{0}", obj);
 
-        public static void LogError(
-            object obj,
-            [CallerFilePath] string filePath = "",
-            [CallerLineNumber] int lineNumber = 0
-        )
+        public static void Log(LogType type, string format, params object[] args)
         {
-            Log(obj, LogType.Error, filePath, lineNumber);
-        }
-
-        public static void LogAssertion(
-            object obj,
-            [CallerFilePath] string filePath = "",
-            [CallerLineNumber] int lineNumber = 0
-        )
-        {
-            Log(obj, LogType.Assert, filePath, lineNumber);
-        }
-
-        public static void LogException(
-            object obj,
-            [CallerFilePath] string filePath = "",
-            [CallerLineNumber] int lineNumber = 0
-        )
-        {
-            Log(obj, LogType.Exception, filePath, lineNumber);
-        }
-
-        public static void Log(
-            object obj,
-            LogType type = LogType.Log,
-            [CallerFilePath] string filePath = "",
-            [CallerLineNumber] int lineNumber = 0
-        )
-        {
-            string serializedObj = Serializer.Serialize(obj);
+            string message = string.Format(format, args.Select(Serializer.Serialize).ToArray());
 
 #if UNITY_EDITOR // avoid the expensive stuff if we're not in the editor and only serialize the object, as we're not going to see them in the log files anyway
 
-            string stackTrace = FormatStackTrace(new StackTrace(true).ToString());
-            LogInfo info = new(type, stackTrace, filePath, lineNumber);
-            AddEntry(new LogEntry(GetLogFor(obj, info), DateTime.Now));
+            StackTrace stackTrace = new(true);
+            StackFrame[] frames = stackTrace.GetFrames();
+            string filePath = "";
+            int lineNumber = 0;
+            int column = 0;
 
+            foreach (StackFrame frame in frames)
+            {
+                if (frame.GetFileName().EndsWith("Logging/BetterLog.cs")) // there's gotta be a better way to do this, right?
+                    continue;
+
+                filePath = frame.GetFileName();
+                lineNumber = frame.GetFileLineNumber();
+                column = frame.GetFileColumnNumber();
+
+                break;
+            }
+
+            string traceText = FormatStackTrace(stackTrace);
+            LogInfo info = new(type, traceText, filePath, lineNumber, column);
+            LogEntry entry;
+            if (format == "{0}" && args.Length > 0)
+            {
+                entry = new LogEntry(GetLogFor(args[0], info), DateTime.Now);
+            }
+            else
+            {
+                entry = GetFormatLog(format, args, info);
+            }
+
+            LogEntry(entry);
 #endif
 
             _justDebugLogged = true;
-            Debug.unityLogger.Log(type, serializedObj);
+            Debug.unityLogger.Log(type, message);
             _justDebugLogged = false;
         }
     }

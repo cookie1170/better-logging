@@ -36,23 +36,27 @@ namespace Cookie.BetterLogging
 
     public class LogInfo
     {
+        public readonly string StackTrace;
+        public readonly LogType Type;
+
         [CanBeNull]
         public readonly string FilePath;
         public readonly int? LineNumber;
-        public readonly string StackTrace;
-        public readonly LogType Type;
+        public readonly int? Column;
 
         public LogInfo(
             LogType type,
             string stackTrace,
             [CanBeNull] string filePath = null,
-            int? lineNumber = null
+            int? lineNumber = null,
+            int? column = null
         )
         {
             StackTrace = stackTrace;
             Type = type;
             FilePath = filePath;
             LineNumber = lineNumber;
+            Column = column;
         }
     }
 
