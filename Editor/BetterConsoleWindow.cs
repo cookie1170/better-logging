@@ -20,8 +20,7 @@ namespace Cookie.BetterLogging.Editor
         private const string StackTraceFoldout = "stack-trace-foldout";
         private const string StackTraceView = "stack-trace-view";
         private const string StackTraceLabel = "stack-trace-label";
-        private readonly HashSet<(int id, bool isExpanded, bool allChildren)> _expandedItems =
-            new();
+        private readonly HashSet<int> _expandedIDs = new();
         private TreeView _entries;
         private StyleSheet _styleSheet;
         private bool _isBeingRefreshed;
@@ -41,7 +40,7 @@ namespace Cookie.BetterLogging.Editor
 
         private void OnDisable()
         {
-            _expandedItems?.Clear();
+            _expandedIDs?.Clear();
             _entries = null;
             LogStorage.instance.LogReceived -= OnLog;
             LogStorage.instance.Cleared -= Refresh;
@@ -229,27 +228,43 @@ namespace Cookie.BetterLogging.Editor
             if (_isBeingRefreshed)
                 return; // hacky
 
-            // awful
-            (int id, bool isExpanded, bool isAppliedToAllChildren) item = (
+            if (_entries == null)
+                return;
+
+            (int id, bool allChildren, bool expanded) = (
                 args.id,
-                args.isExpanded,
-                args.isAppliedToAllChildren
+                args.isAppliedToAllChildren,
+                args.isExpanded
             );
-            if (args.isExpanded)
+
+            // if we just expanded/collapsed one - that's easy
+            if (!allChildren)
             {
-                _expandedItems.Add(item);
-            }
-            else
-            {
-                (int id, bool, bool isAppliedToAllChildren) expanded = (
-                    args.id,
-                    true,
-                    args.isAppliedToAllChildren
-                );
-                if (_expandedItems.Contains(expanded))
-                    _expandedItems.Remove((args.id, true, args.isAppliedToAllChildren));
+                if (expanded)
+                    _expandedIDs.Add(id);
                 else
-                    _expandedItems.Add(item);
+                    _expandedIDs.Remove(id);
+
+                return;
+            }
+
+            // otherwise, we need to do this for all the children recursively
+            Stack<int> stack = new();
+            stack.Push(id);
+            while (stack.Count > 0)
+            {
+                int childId = stack.Pop();
+
+                if (expanded)
+                    _expandedIDs.Add(childId);
+                else
+                    _expandedIDs.Remove(childId);
+
+                int index = _entries.viewController.GetIndexForId(childId);
+                IEnumerable<int> children = _entries.GetChildrenIdsForIndex(index);
+
+                foreach (int child in children)
+                    stack.Push(child);
             }
         }
 
@@ -266,7 +281,7 @@ namespace Cookie.BetterLogging.Editor
 
         private void Clear()
         {
-            _expandedItems.Clear();
+            _expandedIDs.Clear();
             LogStorage.instance.Clear();
         }
 
@@ -297,13 +312,8 @@ namespace Cookie.BetterLogging.Editor
             _entries.SetRootItems(data);
             _isBeingRefreshed = true;
 
-            foreach ((int id, bool isExpanded, bool allChildren) in _expandedItems)
-            {
-                if (isExpanded)
-                    _entries.ExpandItem(id, allChildren, false);
-                else
-                    _entries.CollapseItem(id, allChildren, false);
-            }
+            foreach (int id in _expandedIDs)
+                _entries.ExpandItem(id, false, false);
 
             _entries.RefreshItems();
 
