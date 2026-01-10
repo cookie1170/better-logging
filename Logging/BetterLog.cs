@@ -106,7 +106,9 @@ namespace Cookie.BetterLogging
             for (int i = 0; i < argTrees.Count; i++)
             {
                 newFormatArgs[i] = $"({i})"; // (1) instead of {1} because i think it looks nicer. sue me
-                children.Add(TreeGenerator.GenerateTree(argTrees[i], i.ToString()));
+                Node tree = argTrees[i];
+                tree.Prefix = i.ToString();
+                children.Add(tree);
             }
 
             return new Node(
