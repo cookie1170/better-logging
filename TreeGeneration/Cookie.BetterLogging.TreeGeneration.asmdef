@@ -1,10 +1,7 @@
 {
-    "name": "Cookie.BetterLogging.Logging",
-    "rootNamespace": "Cookie.BetterLogging",
-    "references": [
-        "Cookie.BetterLogging.Serialization",
-        "Cookie.BetterLogging.TreeGeneration"
-    ],
+    "name": "Cookie.BetterLogging.TreeGeneration",
+    "rootNamespace": "Cookie.BetterLogging.TreeGeneration",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

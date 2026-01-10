@@ -22,30 +22,38 @@ namespace Cookie.BetterLogging.Samples
 
             Button unityLogDictionary = new() { text = "Unity Log Dictionary" };
 
+            Button unityLogComplexDictionary = new() { text = "Unity Log Complex Dictionary" };
+
             Button betterLogList = new() { text = "Better Log List" };
 
             Button betterLogNestedList = new() { text = "Better Log Nested List" };
 
             Button betterLogDictionary = new() { text = "Better Log Dictionary" };
 
+            Button betterLogComplexDictionary = new() { text = "Better Log Complex Dictionary" };
+
             Button betterLogFormatString = new() { text = "Better Log Format String" };
 
             unityLogList.clicked += () => logger.UnityLogList();
             unityLogNestedList.clicked += () => logger.UnityLogNestedList();
             unityLogDictionary.clicked += () => logger.UnityLogDictionary();
+            unityLogComplexDictionary.clicked += () => logger.UnityLogComplexDictionary();
             betterLogList.clicked += () => logger.BetterLogList();
             betterLogNestedList.clicked += () => logger.BetterLogNestedList();
             betterLogDictionary.clicked += () => logger.BetterLogDictionary();
             betterLogFormatString.clicked += () => logger.BetterLogFormatString();
+            betterLogComplexDictionary.clicked += () => logger.BetterLogComplexDictionary();
 
             var typeField = new PropertyField(serializedObject.FindProperty("logType"));
             root.Add(typeField);
             unityLog.Add(unityLogList);
             unityLog.Add(unityLogNestedList);
             unityLog.Add(unityLogDictionary);
+            unityLog.Add(unityLogComplexDictionary);
             betterLog.Add(betterLogList);
             betterLog.Add(betterLogNestedList);
             betterLog.Add(betterLogDictionary);
+            betterLog.Add(betterLogComplexDictionary);
             betterLog.Add(betterLogFormatString);
             root.Add(unityLog);
             root.Add(betterLog);

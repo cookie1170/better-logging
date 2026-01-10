@@ -15,6 +15,18 @@ namespace Cookie.BetterLogging.Samples
             { "Alice", 10.25f },
         };
 
+        private readonly Dictionary<string[], List<int>> _complexDictionary = new()
+        {
+            {
+                new string[] { "Bob", "Alice" },
+                new List<int>() { 1, 2, 3 }
+            },
+            {
+                new string[] { "Guy", "John" },
+                new List<int>() { 4, 5, 6 }
+            },
+        };
+
         private readonly Vector3[] _list =
         {
             new(1, 1, 1),
@@ -44,6 +56,11 @@ namespace Cookie.BetterLogging.Samples
             Debug.unityLogger.Log(logType, _dictionary);
         }
 
+        public void UnityLogComplexDictionary()
+        {
+            Debug.unityLogger.Log(logType, _complexDictionary);
+        }
+
         public void BetterLogList()
         {
             BetterLog.Log(logType, _list);
@@ -57,6 +74,11 @@ namespace Cookie.BetterLogging.Samples
         public void BetterLogDictionary()
         {
             BetterLog.Log(logType, _dictionary);
+        }
+
+        public void BetterLogComplexDictionary()
+        {
+            BetterLog.Log(logType, _complexDictionary);
         }
 
         public void BetterLogFormatString()

@@ -1,6 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using Cookie.BetterLogging.TreeGeneration;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -8,37 +7,42 @@ namespace Cookie.BetterLogging
 {
     public struct LogEntry
     {
-        public readonly LogNode Content;
+        public readonly Node Content;
+        public readonly LogInfo Info;
 
         private const string ErrorColour = "#ff534a";
         private const string WarningColour = "#ffc107";
 
-        public LogEntry(LogNode content, DateTime time)
+        public LogEntry(Node content, LogInfo info)
         {
             Content = content;
-            content.Label = GetLabel(time, content.Info, content.Label);
+            Info = info;
         }
 
-        private static string GetLabel(DateTime time, LogInfo info, string label)
+        private static string GetPrefix(DateTime time, LogInfo info, string prefix)
         {
             string timeString = time.ToLongTimeString();
-            string prefix =
+            string newPrefix =
                 info.Type == LogType.Log ? $"[{timeString}]" : $"[{timeString} - {info.Type}]";
+
+            if (prefix != null)
+                newPrefix += " " + prefix;
 
             return info.Type switch
             {
                 LogType.Assert or LogType.Exception or LogType.Error =>
-                    $"<color=\"{ErrorColour}\"><u>{prefix} {label}</color>",
-                LogType.Warning => $"<color=\"{WarningColour}\"><u>{prefix} {label}</color>",
-                _ => $"{prefix} {label}",
+                    $"<color=\"{ErrorColour}\"><u>{newPrefix}",
+                LogType.Warning => $"<color=\"{WarningColour}\"><u>{newPrefix}",
+                _ => $"{newPrefix}",
             };
         }
     }
 
     public class LogInfo
     {
-        public readonly string StackTrace;
         public readonly LogType Type;
+        public readonly DateTime Time;
+        public readonly string StackTrace;
 
         [CanBeNull]
         public readonly string FilePath;
@@ -47,50 +51,19 @@ namespace Cookie.BetterLogging
 
         public LogInfo(
             LogType type,
+            DateTime time,
             string stackTrace,
             [CanBeNull] string filePath = null,
             int? lineNumber = null,
             int? column = null
         )
         {
-            StackTrace = stackTrace;
             Type = type;
+            Time = time;
+            StackTrace = stackTrace;
             FilePath = filePath;
             LineNumber = lineNumber;
             Column = column;
-        }
-    }
-
-    public class LogNode
-    {
-        /// <summary>
-        ///     The children of the node
-        /// </summary>
-        /// <remarks>
-        ///     This is always empty in builds to avoid the expensive calculations
-        /// </remarks>
-        [CanBeNull]
-        public readonly IReadOnlyList<LogNode> Children;
-
-        public readonly LogInfo Info;
-        public string Label;
-
-        public LogNode(string label, LogInfo info, LogNode[] children = null)
-        {
-            Label = label;
-            Info = info;
-            Children = children ?? Array.Empty<LogNode>();
-        }
-
-        public bool MatchesSearchQuery(string searchQuery)
-        {
-            if (Label.Contains(searchQuery, StringComparison.InvariantCultureIgnoreCase))
-                return true;
-
-            if (Children.Count <= 0)
-                return false;
-
-            return Children.Any(c => c.MatchesSearchQuery(searchQuery));
         }
     }
 }

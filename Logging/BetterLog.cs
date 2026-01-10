@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Cookie.BetterLogging.Serialization;
+using Cookie.BetterLogging.TreeGeneration;
 using JetBrains.Annotations;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -14,8 +16,6 @@ namespace Cookie.BetterLogging
     [PublicAPI]
     public static partial class BetterLog
     {
-        private const int DepthLimit = 8;
-
         private static bool _justDebugLogged = false;
         public static event Action<LogEntry> LogReceived;
 
@@ -36,8 +36,8 @@ namespace Cookie.BetterLogging
             if (_justDebugLogged)
                 return;
 
-            var logInfo = new LogInfo(type, stackTrace);
-            LogEntry(new LogEntry(GetLogFor(message, logInfo), DateTime.Now));
+            var logInfo = new LogInfo(type, DateTime.Now, stackTrace);
+            LogEntry(new LogEntry(new Node(message, Node.Type.Simple, typeof(string)), logInfo));
         }
 
 #if UNITY_EDITOR
@@ -56,7 +56,8 @@ namespace Cookie.BetterLogging
 
         public static void Log(LogType type, string format, params object[] args)
         {
-            string message = string.Format(format, args.Select(Serializer.Serialize).ToArray());
+            List<Node> argTrees = args.Select(TreeGenerator.GenerateTree).ToList();
+            string message = string.Format(format, argTrees.Select(Serializer.Serialize).ToArray());
 
 #if UNITY_EDITOR // avoid the expensive stuff if we're not in the editor and only serialize the object, as we're not going to see them in the log files anyway
 
@@ -79,15 +80,15 @@ namespace Cookie.BetterLogging
             }
 
             string traceText = FormatStackTrace(stackTrace);
-            LogInfo info = new(type, traceText, filePath, lineNumber, column);
+            LogInfo info = new(type, DateTime.Now, traceText, filePath, lineNumber, column);
             LogEntry entry;
             if (format == "{0}" && args.Length > 0)
             {
-                entry = new LogEntry(GetLogFor(args[0], info), DateTime.Now);
+                entry = new LogEntry(argTrees[0], info);
             }
             else
             {
-                entry = GetFormatLog(format, args, info);
+                entry = new LogEntry(GetFormatNode(format, argTrees), info);
             }
 
             LogEntry(entry);
@@ -96,6 +97,24 @@ namespace Cookie.BetterLogging
             _justDebugLogged = true;
             Debug.unityLogger.Log(type, message);
             _justDebugLogged = false;
+        }
+
+        private static Node GetFormatNode(string format, List<Node> argTrees)
+        {
+            List<Node> children = new();
+            string[] newFormatArgs = new string[argTrees.Count];
+            for (int i = 0; i < argTrees.Count; i++)
+            {
+                newFormatArgs[i] = $"({i})"; // (1) instead of {1} because i think it looks nicer. sue me
+                children.Add(TreeGenerator.GenerateTree(argTrees[i], i.ToString()));
+            }
+
+            return new Node(
+                string.Format(format, newFormatArgs),
+                Node.Type.Object,
+                typeof(string),
+                children
+            );
         }
     }
 }

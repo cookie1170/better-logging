@@ -1,14 +1,16 @@
 {
-  "name": "Cookie.BetterLogging.Serialization",
-  "rootNamespace": "Cookie.BetterLogging.Serialization",
-  "references": [],
-  "includePlatforms": [],
-  "excludePlatforms": [],
-  "allowUnsafeCode": false,
-  "overrideReferences": false,
-  "precompiledReferences": [],
-  "autoReferenced": true,
-  "defineConstraints": [],
-  "versionDefines": [],
-  "noEngineReferences": false
+    "name": "Cookie.BetterLogging.Serialization",
+    "rootNamespace": "Cookie.BetterLogging.Serialization",
+    "references": [
+        "Cookie.BetterLogging.TreeGeneration"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

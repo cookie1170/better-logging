@@ -1,26 +1,79 @@
-using System.Collections;
+using System.Text;
+using Cookie.BetterLogging.TreeGeneration;
 using JetBrains.Annotations;
 
 namespace Cookie.BetterLogging.Serialization
 {
     [PublicAPI]
-    public static partial class Serializer
+    public static class Serializer
     {
-        private const int DepthLimit = 8;
+        const int IndentSize = 2;
 
-        public static string Serialize<T>(T obj, int depth = DepthLimit)
+        public static string Serialize(Node target)
         {
-            if (obj is null)
-                return "null";
-            if (depth < 0)
-                return obj.ToString();
+            int indentLevel = 0;
 
-            return obj switch
+            return Serialize(target);
+
+            string Serialize(Node target)
             {
-                string str => str,
-                IDictionary dictionary => SerializeDictionary(dictionary, depth),
-                IEnumerable enumerable => SerializeEnumerable(enumerable, depth),
-                _ => obj.ToString(),
+                StringBuilder sb = new();
+                AppendIndent(sb, indentLevel);
+                if (target.Prefix != null)
+                {
+                    sb.Append(target.Prefix);
+                    sb.Append(": ");
+                }
+
+                sb.Append(target.Name);
+
+                if (target.IsLeaf())
+                    return sb.ToString();
+
+                sb.Append(": ");
+                sb.Append(GetOpenChar(target.NodeType));
+                sb.Append('\n');
+                indentLevel++;
+
+                for (int i = 0; i < target.Children.Count; i++)
+                {
+                    Node child = target.Children[i];
+                    sb.Append(Serialize(child));
+                    if (i < target.Children.Count - 1)
+                        sb.Append(",\n");
+                    else
+                        sb.Append('\n');
+                }
+
+                indentLevel--;
+                AppendIndent(sb, indentLevel);
+                sb.Append(GetCloseChar(target.NodeType));
+
+                return sb.ToString();
+            }
+        }
+
+        private static void AppendIndent(StringBuilder sb, int indentLevel)
+        {
+            for (int i = 0; i < IndentSize * indentLevel; i++)
+                sb.Append(' ');
+        }
+
+        private static char GetOpenChar(Node.Type nodeType)
+        {
+            return nodeType switch
+            {
+                Node.Type.Collection => '[',
+                _ => '{',
+            };
+        }
+
+        private static char GetCloseChar(Node.Type nodeType)
+        {
+            return nodeType switch
+            {
+                Node.Type.Collection => ']',
+                _ => '}',
             };
         }
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cookie.BetterLogging.TreeGeneration;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEditorInternal;
@@ -48,7 +49,7 @@ namespace Cookie.BetterLogging.Editor
 
         private void CreateGUI()
         {
-            LogNode selectedEntry = null;
+            LogNode? selectedEntry = null;
 
             Toolbar toolbar = new();
 
@@ -73,7 +74,7 @@ namespace Cookie.BetterLogging.Editor
             );
 
             ToolbarSpacer spacer = new() { style = { flexGrow = 1f } };
-            ToolbarSearchField search = new();
+            ToolbarSearchField search = new() { viewDataKey = "log-search" };
             search.RegisterValueChangedCallback(OnSearch);
 
             toolbar.Add(clearButton);
@@ -119,7 +120,7 @@ namespace Cookie.BetterLogging.Editor
 
             _entries.bindItem = (element, i) =>
             {
-                ((Label)element).text = _entries.GetItemDataForIndex<LogNode>(i).Label;
+                ((Label)element).text = _entries.GetItemDataForIndex<LogNode>(i).GetLabel();
             };
 
             _entries.itemsChosen += OnEntryChosen;
@@ -306,7 +307,7 @@ namespace Cookie.BetterLogging.Editor
                         continue;
                 }
 
-                data.Add(GetTreeViewItemData(LogStorage.instance.Logs[i].Content, ref indexOffset));
+                data.Add(GetTreeViewItemData(LogStorage.instance.Logs[i], ref indexOffset));
             }
 
             _entries.SetRootItems(data);
@@ -324,13 +325,13 @@ namespace Cookie.BetterLogging.Editor
         }
 
         private static TreeViewItemData<LogNode> GetTreeViewItemData(
-            LogNode item,
+            LogEntry entry,
             ref int indexOffset
         )
         {
             int index = 0 + indexOffset;
 
-            var result = Process(item);
+            var result = Process(new LogNode(entry.Content, entry.Info));
             indexOffset = index + 1;
 
             return result;
@@ -356,6 +357,116 @@ namespace Cookie.BetterLogging.Editor
         public static void OpenWindow()
         {
             CreateWindow<BetterConsoleWindow>(Type.GetType("ConsoleWindow"));
+        }
+
+        /// <summary>
+        /// Wrapper struct around Node
+        /// </summary>
+        // is there a better way to do this? just copying all the fields seems dumb..
+        // but i can't really think of a way to make it work with the children so idk?
+        struct LogNode
+        {
+            /// <summary>
+            /// The name of the node
+            /// </summary>
+            public string Name;
+
+            /// <summary>
+            /// The prefix of the node. This could be something like an array index, dictionary key or a field name
+            /// </summary>
+            public string Prefix;
+
+            /// <summary>
+            /// The type of the node
+            /// </summary>
+            /// <seealso cref="TreeGeneration.NodeType"/>
+            public Node.Type NodeType;
+
+            /// <summary>
+            /// The type of the object
+            /// </summary>
+            public Type ObjectType;
+
+            /// <summary>
+            /// The children of the node, <c>null</c> if it's a leaf node
+            /// </summary>
+            public List<LogNode> Children;
+
+            /// <summary>
+            /// The LogInfo associated with this node
+            /// </summary>
+            public LogInfo Info;
+
+            /// <summary>
+            /// Is the node a root node?
+            /// </summary>
+            public bool IsRoot;
+
+            /// <summary>
+            /// Is this node a leaf node?
+            /// </summary>
+            /// <returns>True if <c>Children</c> is null or empty</returns>
+            public readonly bool IsLeaf() => Children == null || Children.Count <= 0;
+
+            /// <summary>
+            /// Whether the node matches <c>searchQuery</c>
+            /// </summary>
+            /// <param name="searchQuery">The query to search for</param>
+            /// <returns>True if <c>searchQuery</c> appears anywhere in the prefix or name of this node or its' children</returns>
+            public readonly bool MatchesSearchQuery(string searchQuery)
+            {
+                if (Name.Contains(searchQuery, StringComparison.InvariantCultureIgnoreCase))
+                    return true;
+
+                if (
+                    Prefix != null
+                    && Prefix.Contains(searchQuery, StringComparison.InvariantCultureIgnoreCase)
+                )
+                    return true;
+
+                if (IsLeaf())
+                    return false;
+
+                return Children.Any(c => c.MatchesSearchQuery(searchQuery));
+            }
+
+            private const string ErrorColour = "#ff534a";
+            private const string WarningColour = "#ffc107";
+
+            public readonly string GetLabel()
+            {
+                string timeString = Info.Time.ToLongTimeString();
+                string infoPrefix = "";
+                if (IsRoot)
+                {
+                    infoPrefix =
+                        Info.Type == LogType.Log
+                            ? $"[{timeString}] "
+                            : $"[{timeString} - {Info.Type}] ";
+                }
+
+                string prefix = Prefix == null ? "" : $"{Prefix}: ";
+
+                return Info.Type switch
+                {
+                    LogType.Assert or LogType.Exception or LogType.Error =>
+                        $"<color=\"{ErrorColour}\"><u>{infoPrefix}{prefix}{Name}</u></color>",
+                    LogType.Warning =>
+                        $"<color=\"{WarningColour}\"><u>{infoPrefix}{prefix}{Name}</u></color>",
+                    _ => $"{infoPrefix}{prefix}{Name}",
+                };
+            }
+
+            public LogNode(Node source, LogInfo info, bool isRoot = true)
+            {
+                Info = info;
+                Name = source.Name;
+                Prefix = source.Prefix;
+                NodeType = source.NodeType;
+                ObjectType = source.ObjectType;
+                IsRoot = isRoot;
+                Children = source.Children.Select(c => new LogNode(c, info, false)).ToList();
+            }
         }
     }
 }

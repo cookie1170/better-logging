@@ -1,72 +1,101 @@
 using System.Collections.Generic;
-using Cookie.BetterLogging.Serialization;
+using Cookie.BetterLogging.TreeGeneration;
 using NUnit.Framework;
+using UnityEngine;
+using static Cookie.BetterLogging.Serialization.Serializer;
 
 namespace Cookie.BetterLogging.Tests
 {
     public class SerializationTests
     {
         [Test]
-        public void SerializeEnumerable()
+        public void SimpleTypes()
         {
-            int[] array = { 1, 5, 2, 3 };
-            string serializedArray = Serializer.SerializeEnumerable(array);
-
-            Assert.AreEqual("[1, 5, 2, 3]", serializedArray);
+            Assert.AreEqual("hello world", GenSer("hello world"));
+            Assert.AreEqual("1", GenSer(1));
+            Assert.AreEqual("3.14", GenSer(Mathf.PI));
+            Assert.AreEqual("(0.00, 0.00, 0.00)", GenSer(Vector3.zero));
         }
 
         [Test]
-        public void SerializeDictionary()
+        public void Prefixes()
         {
-            Dictionary<string, int> dict = new()
+            Assert.AreEqual("Prefix: hello world", GenSer("hello world", "Prefix"));
+        }
+
+        [Test]
+        public void ComplexTypes()
+        {
+            List<int> testList = new() { 1, 2, 3 };
+            Assert.AreEqual(
+                @"List`1: [
+  0: 1,
+  1: 2,
+  2: 3
+]",
+                GenSer(testList)
+            );
+
+            Dictionary<string, int> simpleDictionary = new()
             {
-                { "John", 1 },
-                { "Alice", 3 },
-                { "Bob", 5 },
+                { "Bob", 1 },
+                { "Alice", 2 },
+                { "John", 3 },
+            };
+            Assert.AreEqual(
+                @"Dictionary`2: {
+  Bob: 1,
+  Alice: 2,
+  John: 3
+}",
+                GenSer(simpleDictionary)
+            );
+
+            Dictionary<string[], List<int>> complexDictionary = new()
+            {
+                {
+                    new string[] { "Bob", "Alice" },
+                    new List<int>() { 1, 2, 3 }
+                },
+                {
+                    new string[] { "Guy", "John" },
+                    new List<int>() { 4, 5, 6 }
+                },
             };
 
-            string serializedDictionary = Serializer.SerializeDictionary(dict);
-            Assert.AreEqual("{ John: 1, Alice: 3, Bob: 5 }", serializedDictionary);
-        }
-
-        [Test]
-        public void TypeRecognition()
-        {
-            int[] array = { 1, 4, 8, 10 };
-            List<int> list = new() { 5, 12, 59 };
-            Dictionary<string, int> dict = new()
-            {
-                { "John", 1 },
-                { "Alice", 3 },
-                { "Bob", 5 },
-            };
-
             Assert.AreEqual(
-                Serializer.SerializeEnumerable(array),
-                Serializer.Serialize(array),
-                "Array"
-            );
-            Assert.AreEqual(
-                Serializer.SerializeEnumerable(list),
-                Serializer.Serialize(list),
-                "List"
-            );
-            Assert.AreEqual(
-                Serializer.SerializeDictionary(dict),
-                Serializer.Serialize(dict),
-                "Dictionary"
+                @"Dictionary`2: {
+  Entry: {
+    Key: String[]: [
+      0: Bob,
+      1: Alice
+    ],
+    Value: List`1: [
+      0: 1,
+      1: 2,
+      2: 3
+    ]
+  },
+  Entry: {
+    Key: String[]: [
+      0: Guy,
+      1: John
+    ],
+    Value: List`1: [
+      0: 4,
+      1: 5,
+      2: 6
+    ]
+  }
+}",
+                GenSer(complexDictionary)
             );
         }
 
-        [Test]
-        public void DepthLimit()
-        {
-            int[][][] array = { new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } } };
+        private static string GenSer(object target) =>
+            Serialize(TreeGenerator.GenerateTree(target));
 
-            Assert.AreNotEqual(
-                Serializer.SerializeEnumerable(array, 2),
-                Serializer.SerializeEnumerable(array, 1)
-            );
-        }
+        private static string GenSer(object target, string prefix) =>
+            Serialize(TreeGenerator.GenerateTree(target, prefix));
     }
 }

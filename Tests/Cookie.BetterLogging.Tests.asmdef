@@ -4,7 +4,8 @@
   "references": [
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner",
-    "Cookie.BetterLogging.Serialization"
+    "Cookie.BetterLogging.Serialization",
+    "Cookie.BetterLogging.TreeGeneration"
   ],
   "includePlatforms": [
     "Editor"
