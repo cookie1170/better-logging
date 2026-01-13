@@ -52,11 +52,9 @@ namespace Cookie.BetterLogging
 
         private static void LogEntry(LogEntry entry) => LogReceived?.Invoke(entry);
 
-        public static void Log(LogType type, object obj) => Log(type, "{0}", obj);
-
-        public static void Log(LogType type, string format, params object[] args)
+        public static partial void WithType(LogType type, string format, params object[] args)
         {
-            List<Node> argTrees = args.Select(TreeGenerator.GenerateTree).ToList();
+            List<Node> argTrees = args.Select((o) => TreeGenerator.GenerateTree(o)).ToList();
             string message = string.Format(format, argTrees.Select(Serializer.Serialize).ToArray());
 
 #if UNITY_EDITOR // avoid the expensive stuff if we're not in the editor and only serialize the object, as we're not going to see them in the log files anyway

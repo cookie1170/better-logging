@@ -25,7 +25,7 @@ namespace Cookie.BetterLogging.Serialization
                     sb.Append(": ");
                 }
 
-                sb.Append(target.Name);
+                sb.Append(target.Label);
 
                 if (target.IsLeaf())
                     return sb.ToString();

@@ -10,9 +10,9 @@ namespace Cookie.BetterLogging.TreeGeneration
     public struct Node
     {
         /// <summary>
-        /// The name of the node
+        /// The label shown for the node
         /// </summary>
-        public string Name;
+        public string Label;
 
         /// <summary>
         /// The prefix of the node. This could be something like an array index, dictionary key or a field name
@@ -48,7 +48,7 @@ namespace Cookie.BetterLogging.TreeGeneration
         /// <returns>True if <c>searchQuery</c> appears anywhere in the prefix or name of this node or its' children</returns>
         public readonly bool MatchesSearchQuery(string searchQuery)
         {
-            if (Name.Contains(searchQuery, StringComparison.InvariantCultureIgnoreCase))
+            if (Label.Contains(searchQuery, StringComparison.InvariantCultureIgnoreCase))
                 return true;
 
             if (
@@ -63,44 +63,44 @@ namespace Cookie.BetterLogging.TreeGeneration
             return Children.Any(c => c.MatchesSearchQuery(searchQuery));
         }
 
-        public Node(string name, Type nodeType, System.Type objectType, params Node[] children)
+        public Node(string label, Type nodeType, System.Type objectType, params Node[] children)
         {
             Prefix = null;
-            Name = name;
+            Label = label;
             NodeType = nodeType;
             ObjectType = objectType;
             Children = new(children);
         }
 
         public Node(
-            string name,
+            string label,
             string prefix,
             Type nodeType,
             System.Type objectType,
             params Node[] children
         )
-            : this(name, nodeType, objectType, children)
+            : this(label, nodeType, objectType, children)
         {
             Prefix = prefix;
         }
 
-        public Node(string name, Type nodeType, System.Type objectType, List<Node> children)
+        public Node(string label, Type nodeType, System.Type objectType, List<Node> children)
         {
             Prefix = null;
-            Name = name;
+            Label = label;
             NodeType = nodeType;
             ObjectType = objectType;
             Children = children;
         }
 
         public Node(
-            string name,
+            string label,
             string prefix,
             Type nodeType,
             System.Type objectType,
             List<Node> children
         )
-            : this(name, nodeType, objectType, children)
+            : this(label, nodeType, objectType, children)
         {
             Prefix = prefix;
         }

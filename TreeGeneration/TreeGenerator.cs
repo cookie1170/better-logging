@@ -105,5 +105,9 @@ namespace Cookie.BetterLogging.TreeGeneration
 
         /// <inheritdoc cref="GenerateTree(object, string, int)" />
         public static Node GenerateTree(object target) => GenerateTree(target, null, MaxDepth);
+
+        /// <inheritdoc cref="GenerateTree(object, string, int)" />
+        public static Node GenerateTree(object target, int depth) =>
+            GenerateTree(target, null, depth);
     }
 }

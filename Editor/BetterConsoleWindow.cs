@@ -460,7 +460,7 @@ namespace Cookie.BetterLogging.Editor
             public LogNode(Node source, LogInfo info, bool isRoot = true)
             {
                 Info = info;
-                Name = source.Name;
+                Name = source.Label;
                 Prefix = source.Prefix;
                 NodeType = source.NodeType;
                 ObjectType = source.ObjectType;

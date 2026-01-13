@@ -25,19 +25,19 @@ namespace Cookie.BetterLogging.Tests
         public void SimpleTypeTrees()
         {
             Node stringNode = GenerateTree("Hello world!");
-            Assert.AreEqual("Hello world!", stringNode.Name);
+            Assert.AreEqual("Hello world!", stringNode.Label);
             Assert.IsTrue(stringNode.IsLeaf());
 
             Node vector3Node = GenerateTree(Vector3.zero);
-            Assert.AreEqual(Vector3.zero.ToString(), vector3Node.Name);
+            Assert.AreEqual(Vector3.zero.ToString(), vector3Node.Label);
             Assert.IsTrue(vector3Node.IsLeaf());
 
             Node floatNode = GenerateTree(Mathf.PI);
-            Assert.AreEqual("3.14", floatNode.Name);
+            Assert.AreEqual("3.14", floatNode.Label);
             Assert.IsTrue(floatNode.IsLeaf());
 
             Node doubleNode = GenerateTree(Math.PI);
-            Assert.AreEqual("3.14", doubleNode.Name);
+            Assert.AreEqual("3.14", doubleNode.Label);
             Assert.IsTrue(doubleNode.IsLeaf());
         }
 
@@ -48,7 +48,7 @@ namespace Cookie.BetterLogging.Tests
             Node enumNode = GenerateTree(enumValue);
             Assert.IsTrue(enumNode.IsLeaf());
             Assert.AreEqual(Node.Type.Enum, enumNode.NodeType);
-            Assert.AreEqual("AnotherMember", enumNode.Name);
+            Assert.AreEqual("AnotherMember", enumNode.Label);
         }
 
         [Test]
@@ -65,7 +65,7 @@ namespace Cookie.BetterLogging.Tests
             {
                 Node childNode = listNode.Children[i];
                 Assert.IsTrue(childNode.IsLeaf());
-                Assert.AreEqual(testList[i].ToString(), childNode.Name);
+                Assert.AreEqual(testList[i].ToString(), childNode.Label);
                 Assert.AreEqual(i.ToString(), childNode.Prefix);
             }
 
@@ -86,7 +86,7 @@ namespace Cookie.BetterLogging.Tests
             for (int i = 0; i < simpleDictionary.Count; i++)
             {
                 Node childNode = simpleDictionaryNode.Children[i];
-                Assert.AreEqual(simpleValues[i].ToString(), childNode.Name);
+                Assert.AreEqual(simpleValues[i].ToString(), childNode.Label);
                 Assert.AreEqual(simpleKeys[i], childNode.Prefix);
             }
 
@@ -114,18 +114,46 @@ namespace Cookie.BetterLogging.Tests
                 Node childNode = complexDictionaryNode.Children[i];
                 Assert.IsFalse(childNode.IsLeaf()); // in a complex dictionary like this, it shouldn't be a leaf node!
                 Assert.AreEqual(2, childNode.Children.Count);
-                Assert.AreEqual("Entry", childNode.Name);
+                Assert.AreEqual("Entry", childNode.Label);
 
                 Node key = childNode.Children[0];
                 Assert.AreEqual("Key", key.Prefix);
                 for (int j = 0; j < complexKeys[i].Length; j++)
-                    Assert.AreEqual(complexKeys[i][j].ToString(), key.Children[j].Name);
+                    Assert.AreEqual(complexKeys[i][j].ToString(), key.Children[j].Label);
 
                 Node value = childNode.Children[1];
                 Assert.AreEqual("Value", value.Prefix);
                 for (int j = 0; j < complexValues[i].Count; j++)
-                    Assert.AreEqual(complexValues[i][j].ToString(), value.Children[j].Name);
+                    Assert.AreEqual(complexValues[i][j].ToString(), value.Children[j].Label);
             }
+
+            TestStruct testStruct = new(10, 15);
+            Node structNode = GenerateTree(testStruct);
+
+            Assert.IsFalse(structNode.IsLeaf());
+            Assert.AreEqual(2, structNode.Children.Count);
+            Assert.AreEqual(Node.Type.Object, structNode.NodeType);
+
+            Assert.AreEqual(nameof(TestStruct.PublicField), structNode.Children[0].Prefix);
+            Assert.AreEqual(nameof(TestStruct.PublicProperty), structNode.Children[1].Prefix);
+
+            Assert.AreEqual(testStruct.PublicField, structNode.Children[0].Label);
+            Assert.AreEqual(testStruct.PublicProperty, structNode.Children[1].Label);
+        }
+
+        struct TestStruct
+        {
+            public TestStruct(int publicField, int privateField)
+                : this()
+            {
+                PublicField = publicField;
+                _privateField = privateField;
+            }
+
+            public int PublicField;
+
+            private readonly int _privateField;
+            public readonly int PublicProperty => _privateField;
         }
 
         enum TestEnum

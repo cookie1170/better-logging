@@ -41,6 +41,11 @@ namespace Cookie.BetterLogging.Samples
             new Vector3[] { new(-1, 10, -5), new(1, -2, 3), new(-1, -1, -1) },
         };
 
+        private readonly LoggerStruct _struct = new(
+            "This is a public field!",
+            "And i'm a public property encapsulating _privateField!"
+        );
+
         public void UnityLogList()
         {
             Debug.unityLogger.Log(logType, _list);
@@ -61,35 +66,59 @@ namespace Cookie.BetterLogging.Samples
             Debug.unityLogger.Log(logType, _complexDictionary);
         }
 
+        public void UnityLogStruct()
+        {
+            Debug.unityLogger.Log(logType, _struct);
+        }
+
         public void BetterLogList()
         {
-            BetterLog.Log(logType, _list);
+            BetterLog.WithType(logType, _list);
         }
 
         public void BetterLogNestedList()
         {
-            BetterLog.Log(logType, _nestedList);
+            BetterLog.WithType(logType, _nestedList);
         }
 
         public void BetterLogDictionary()
         {
-            BetterLog.Log(logType, _dictionary);
+            BetterLog.WithType(logType, _dictionary);
         }
 
         public void BetterLogComplexDictionary()
         {
-            BetterLog.Log(logType, _complexDictionary);
+            BetterLog.WithType(logType, _complexDictionary);
+        }
+
+        public void BetterLogStruct()
+        {
+            BetterLog.WithType(logType, _struct);
         }
 
         public void BetterLogFormatString()
         {
-            BetterLog.Log(
+            BetterLog.WithType(
                 logType,
-                "List: {0}, Nested list: {1}, Dictionary: {2}",
+                "List: {0}, Nested list: {1}, Dictionary: {2}, Struct: {3}",
                 _list,
                 _nestedList,
-                _dictionary
+                _dictionary,
+                _struct
             );
+        }
+
+        readonly struct LoggerStruct
+        {
+            public readonly string PublicField;
+            public readonly string PublicProperty => _privateField;
+            private readonly string _privateField;
+
+            public LoggerStruct(string publicField, string privateField)
+            {
+                PublicField = publicField;
+                _privateField = privateField;
+            }
         }
     }
 }

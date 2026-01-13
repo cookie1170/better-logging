@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Cookie.BetterLogging.TreeGeneration
 {
@@ -69,9 +70,25 @@ namespace Cookie.BetterLogging.TreeGeneration
         /// <returns>A list of nodes representing the object's fields</returns>
         private static List<Node> GenerateObject(object target, int depth)
         {
-            throw new NotImplementedException(
-                "Generating trees for arbitrary objects isn't supported yet!"
-            );
+            List<Node> children = new();
+
+            Type type = target.GetType();
+            FieldInfo[] fields = type.GetFields();
+            PropertyInfo[] props = type.GetProperties();
+
+            foreach (FieldInfo field in fields)
+            {
+                Node node = GenerateTree(field.GetValue(target), field.Name, depth - 1);
+                children.Add(node);
+            }
+
+            foreach (PropertyInfo prop in props)
+            {
+                Node node = GenerateTree(prop.GetValue(target), prop.Name, depth - 1);
+                children.Add(node);
+            }
+
+            return children;
         }
     }
 }
